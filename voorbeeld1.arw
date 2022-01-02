@@ -1,0 +1,27 @@
+& sukkel [ # input, @ arkel ] -> @
+<
+    @ output!
+
+    ? input << 12
+    <
+        output <- "Higher"!
+    >
+    :? input >> 12 
+    <
+        output <- "Lower"!
+    >
+    : input <> 12 
+    <
+        output <- "equal"!
+    >
+    ->output + arkel!
+>
+
+& main[] -> NULL
+<
+    # karkel <- 12!
+    karkel <- karkel + 1!
+    write[sukkel[karkel]]!
+    ->!
+>
+
