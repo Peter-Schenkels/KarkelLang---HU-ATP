@@ -93,6 +93,13 @@ class KeywordNode(ASTNode):
         self.parentNode = parentNode
         self.codeSequenceNode = CodeSequenceNode(self, globalVariables, list(ASTNode))
 
+
+class ReturnNode(KeywordNode):
+        def __init__(self, parentNode: ASTNode, globalVariables: list, identifier: IdentifierNode):
+            self.parentNode = parentNode
+            self.codeSequenceNode = CodeSequenceNode(self, globalVariables, list(ASTNode))
+            self.returnValue = identifier
+
 class IfNode(KeywordNode):
     def __init__(self, parentNode: ASTNode, comparison: ComparisonNode, globalVariables: list, codeSequence: list):
         self.parentNode = parentNode
@@ -111,3 +118,9 @@ class ElseNode(KeywordNode):
         self.parentNode = parentNode
         self.ifNode = ifNode
         self.codeSequenceNode = CodeSequenceNode(self, globalVariables, codeSequence)
+
+class ASTRoot():
+    def __init__(self, tokens: list):
+        self.globalVariables = list(ASTNode)
+        self.codeSequenceNode = CodeSequenceNode(self, self.globalVariables, list(ASTNode))
+        self.tokens = tokens.copy()
