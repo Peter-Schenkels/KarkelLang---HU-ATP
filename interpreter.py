@@ -205,29 +205,7 @@ def interpreter(node: FunctionNode, root: ASTRoot, error: ErrorClass = None) -> 
         print(error.what)
         print(error.where)
     
-    
-def TestAssignFunction():    
-    returnVariable = IntegerNode(None, 69, IdentifierNode(None, "jerkel", 0), 0)
-    lineOne = ReturnNode(None, returnVariable, 0)
-    codeSequenceNode = CodeSequenceNode(None, [], [lineOne], 0)
-    codeSequenceNode.LocalVariables.append(returnVariable)
-    function = FunctionNode(None, IntegerNode, [], codeSequenceNode, IdentifierNode([], "Sukkel", 0), 0)
-    VariableOne = IntegerNode(None, 5, IdentifierNode(None, "Erkel", 0), 0)
-    lineOne = AssignNode(None, IntegerNode(None, None, IdentifierNode(None, "Erkel", 0), 0), FunctionNode(None, IntegerNode, [], [], IdentifierNode([], "Sukkel", 0), 0), 0)
-    codeSequenceNode = CodeSequenceNode(None, [], [lineOne], 0)
-    codeSequenceNode.LocalVariables.append(VariableOne)
-    mainFunction = FunctionNode(None, type(AssignNode), [], codeSequenceNode, IdentifierNode([], "Main", 0), 0)
-    astRoot = ASTNode(None, 0)
-    astRoot.globalVariables.append(function)
-    astRoot.globalVariables.append(mainFunction)
-    output = interpreterRun(astRoot)   
-    check = getItemFromList(output.currentFunction.codeSequenceNode.LocalVariables, "Erkel")
-    
-    if(check.value == 69):
-        print("Test Assign Function Succeeded") 
-    else:
-        print("Test Assign Function Failed")
-        
+
 
     
     
