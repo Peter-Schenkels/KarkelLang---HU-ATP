@@ -38,6 +38,7 @@ class OperatorNode(ASTNode):
         super().__init__(parentNode, lineNr)
         self.left = left
         self.right = right
+        self.output = None
         
 class AssignNode(OperatorNode):
     def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
@@ -89,39 +90,26 @@ class ReturnNode(KeywordNode):
         super().__init__( parentNode, [], lineNr)
         self.parentNode = parentNode
         self.value = value
-    
 
-
-
-# class AdditionNode(OperatorNode):
-#     def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode):
-#         self.parentNode = parentNode
-#         self.left = left
-#         self.right = right
+class AdditionNode(OperatorNode):
+    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
+        super().__init__( parentNode, left, right, lineNr)
        
-# class SubtractionNode(OperatorNode):
-#     def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode):
-#         self.parentNode = parentNode
-#         self.left = left
-#         self.right = right
+class SubtractionNode(OperatorNode):
+    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
+        super().__init__( parentNode, left, right, lineNr)
 
-# class MultiplicationNode(OperatorNode):
-#     def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode):
-#         self.parentNode = parentNode
-#         self.left = left
-#         self.right = right
+class MultiplicationNode(OperatorNode):
+    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
+        super().__init__( parentNode, left, right, lineNr)
 
-# class DivideNode(OperatorNode):
-#     def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode):
-#         self.parentNode = parentNode
-#         self.left = left
-#         self.right = right    
+class DivisionNode(OperatorNode):
+    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
+        super().__init__( parentNode, left, right, lineNr)
 
-# class ComparisonNode(OperatorNode):
-#     def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode):
-#         self.parentNode = parentNode
-#         self.left = left
-#         self.right = right    
+class ComparisonNode(OperatorNode):
+    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
+        super().__init__( parentNode, left, right, lineNr)
         
 
 

@@ -27,62 +27,147 @@ class InterpreterObject(object):
         self.error = error
         self.currentFunction = currentFunction
 
+class VariableObject():
+    def __init__(self, variable: PrimitiveNode, local: bool, localVariables: list, globalVariables: list): 
+        self.variable = variable
+        self.local = local
+        self.localVariables = localVariables
+        self.globalVariables = globalVariables
+
+class OperatorObject():
+    def __init__(self, output: PrimitiveNode, Error: ErrorClass):
+        self.output = output
+        self.Error = Error
+   
+def GetVariableFromContext(globalVariables: list, localVariables: list, parameters: list, name: PrimitiveNode) -> VariableObject:
+    output = VariableObject(None, None, None, None)
+    if(name.identifier == None):
+        output.variable = name.value
+    elif(getIndexFromList(localVariables, name.identifier.value) >= 0):
+        output.variable = localVariables[getIndexFromList(localVariables, name.identifier.value)]
+    elif(getIndexFromList(globalVariables, name.identifier.value) >= 0):
+        output.variable = globalVariables[getIndexFromList(globalVariables, name.identifier.value)]
+    elif(getIndexFromList(parameters, name.identifier.value) >= 0):
+        output.variable = parameters[getIndexFromList(parameters, name.identifier.value)]
+    return output   
+     
+def PopVariableFromContext(globalVariables: list, localVariables: list, parameters: list, name: PrimitiveNode) -> VariableObject:
+    output = VariableObject(None, None, None, None)
+    if(name.identifier == None):
+        output.variable = name.value
+    elif(getIndexFromList(localVariables, name.identifier.value) >= 0):
+        output.variable = localVariables.pop(getIndexFromList(localVariables, name.identifier.value))
+        output.local = True
+    elif(getIndexFromList(globalVariables, name.identifier.value) >= 0):
+        output.variable = globalVariables.pop(getIndexFromList(globalVariables, name.identifier.value))
+        output.local = False
+    elif(getIndexFromList(parameters, name.identifier.value) >= 0):
+        output.variable = parameters[getIndexFromList(parameters, name.identifier.value)]
+        output.local = None
+
+    output.localVariables = localVariables
+    output.globalVariables = globalVariables
+    return output
+
+def ExecuteOperator(node: OperatorNode, context: FunctionNode, root: ASTRoot):
+    left = GetVariableFromContext(root.globalVariables, context.codeSequenceNode.LocalVariables, context.parameters, node.left)
+    right = GetVariableFromContext(root.globalVariables, context.codeSequenceNode.LocalVariables, context.parameters, node.right)
+    output = OperatorObject(None ,None)
+    if(type(left.variable) == type(right.variable)):
+        if(type(node) == AdditionNode):
+            if(type(left.variable) in [IntegerNode, StringNode]):
+                node.left.value = node.left.value + node.right.value
+                output.output = node.left
+            else:
+                output.error = ErrorClass("Addition not available for this type", node.lineNr)
+        elif(type(node) == SubtractionNode):
+            if(type(left.variable) in [IntegerNode, StringNode]):
+                node.left.value = node.left.value + node.right.value
+                output.output = node.left
+            else:
+                output.error = ErrorClass("Subtraction not available for this type", node.lineNr)
+        elif(type(node) == MultiplicationNode):
+            if(type(left.variable) in [IntegerNode]):
+                node.left.value = node.left.value * node.right.value
+                output.output = node.left
+            else:
+                output.error = ErrorClass("Multiplication not available for this type", node.lineNr)
+        elif(type(node) == DivisionNode):
+            if(type(left.variable) in [IntegerNode]):
+                node.left.value = node.left.value / node.right.value
+                output.output = node.left
+            else:
+                output.error = ErrorClass("Division not available for this type", node.lineNr)
+        elif(type(node) == ComparisonNode):
+            if(type(left.variable) in [IntegerNode, StringNode]):
+                node.left.value = node.left.value == node.right.value
+                output.output = node.left
+            else:
+                output.error = ErrorClass("Comparison not available for this type", node.lineNr)
+        else:
+            output.error = ErrorClass("Operator error", node.lineNr)
+        return output
+    else:
+        output.error = ErrorClass("Operator error", node.lineNr)
+        return output
+
 def ExecuteAssignNode(node: AssignNode, context: FunctionNode, root: ASTRoot):
     left = None
     local = None
     localVariables = context.codeSequenceNode.LocalVariables
     if(node.left == None or node.right == None):
         return InterpreterObject(root, ErrorClass("Incorrect Assignation: ", node.lineNr))
-    
-    if(getIndexFromList(localVariables, node.left.identifier.value) >= 0):
-        left = localVariables.pop(getIndexFromList(localVariables, node.left.identifier.value))
-        local = True
-    elif(getIndexFromList(root.globalVariables, node.left.identifier.value) >= 0):
-        left = root.globalVariables.pop(getIndexFromList(root.globalVariables, node.left.identifier.value))
-        local = False
-    elif(node.left.identifier == None ):
-        return InterpreterObject(root, ErrorClass("Incorrect Assignation, left variable cant be None: ", node.lineNr))
     else:
-        left = node.left
-
-    if(node.right.identifier == None):
-        right = node.right 
-    elif(getIndexFromList(localVariables, node.right.identifier.value) >= 0):
-        right =  localVariables[getIndexFromList(localVariables, node.right.identifier.value)]
-    elif(getIndexFromList(root.globalVariables, node.right.identifier.value)  >= 0):
-        right =  root.globalVariables[getIndexFromList(root.globalVariables, node.right.identifier.value)]
-    else:
-        return InterpreterObject(root, ErrorClass("Incorrect Assignation: ", node.lineNr), context)
-    if(type(right) == FunctionNode):
-        if(right.returnType == type(left)):
-            output = interpreter(right, root, None)
-            right = output.currentFunction.returnValue
+        left = PopVariableFromContext(root.globalVariables, localVariables, context.parameters, node.left)
+        root.globalVariables = left.globalVariables
+        localVariables = left.localVariables
+        if(left == None ):
+            return InterpreterObject(root, ErrorClass("Incorrect Assignation, left doesn't exist: ", node.lineNr))
+        
+        right = VariableObject(None, None, None, None)
+        
+        if(type(node.right) in [AdditionNode, SubtractionNode, MultiplicationNode, DivisionNode, ComparisonNode]):
+            output = ExecuteOperator(node.right, context, root)
+            if(output.Error == None):
+                right.variable = output.output
+            else:
+                return InterpreterObject(root, output.Error, context)
         else:
-            return InterpreterObject(root, ErrorClass("Output type of function is does not match variable type: ", node.lineNr), context)
-    if(type(left) == type(right)):
-        left.value = right.value
-        if(local):
-            localVariables.append(left)
-        elif(not local):
-            root.globalVariables.append(left)
-        return InterpreterObject(root, None, context)
-   
+            right = PopVariableFromContext(root.globalVariables, localVariables, context.parameters, node.right)
+            
+        if(right == None ):
+            return InterpreterObject(root, ErrorClass("Incorrect Assignation, right is an incorrect value: ", node.lineNr))
+        
+        # Check if variable is not a value but function or Operator
+        if(type(right.variable) == FunctionNode):
+            output = interpreter(right.variable, root, None)
+            right.variable = output.currentFunction.returnValue  
+        elif(type(node.right) == OperatorNode):
+            output = ExecuteOperator(node.right, context, root)
+            if(output.error != None):
+                right.variable = output.output
+            else:
+                InterpreterObject(root, output.error, context)
+                
+        if(type(left.variable) == type(right.variable)):
+            left.variable.value = right.variable.value
+            if(left.local):
+                localVariables.append(left.variable)
+            elif(not local):
+                root.globalVariables.append(left.variable)
+            return InterpreterObject(root, None, context)
     return InterpreterObject(root, ErrorClass("Types do not match: ", node.lineNr), context)
 
 def ExecuteReturnNode(node: ReturnNode, context: FunctionNode, root: ASTRoot):
     if(node.value != None):
-        returnValue = None
         localVariables = context.codeSequenceNode.LocalVariables
-        if(node.value.identifier == None):
-            returnValue = node.value.value
-        elif(getIndexFromList(localVariables, node.value.identifier.value) >= 0):
-            returnValue = localVariables[getIndexFromList(localVariables, node.value.identifier.value)]
-        elif(getIndexFromList(root.globalVariables, node.value.identifier.value)  >= 0):
-            returnValue = root.globalVariables[getIndexFromList(root.globalVariables, node.identifier.value)]
-        else:
+        returnValue = PopVariableFromContext(root.globalVariables, localVariables,context.parameters, node.value)
+        root.globalVariables = returnValue.globalVariables
+        localVariables = returnValue.localVariables
+        if(returnValue == None):
             return InterpreterObject(root, ErrorClass("Incorrect return Value: ", node.lineNr), context) 
-        if(context.returnType == type(returnValue)):
-            context.returnValue = node.value
+        if(context.returnType == type(returnValue.variable)):
+            context.returnValue = returnValue.variable
             return InterpreterObject(root, None, context)
         else:
             return InterpreterObject(root, ErrorClass("Incorrect return type: ", node.lineNr), context)     
@@ -142,46 +227,7 @@ def TestAssignFunction():
         print("Test Assign Function Succeeded") 
     else:
         print("Test Assign Function Failed")
-    
-def TestAssign():        
-    VariableOne = IntegerNode(None, 5, IdentifierNode(None, "Erkel", 0), 0)
-    VariableTwo = IntegerNode(None, 2553, IdentifierNode(None, "jerkel", 0), 0)
-    lineOne = AssignNode(None, IntegerNode(None, None, IdentifierNode(None, "Erkel", 0), 0), IntegerNode(None, None, IdentifierNode(None, "jerkel", 0), 0 ), 0)
-    codeSequenceNode = CodeSequenceNode(None, [], [lineOne], 0)
-    codeSequenceNode.LocalVariables.append(VariableOne)
-    codeSequenceNode.LocalVariables.append(VariableTwo)
-    mainFunction = FunctionNode(None, type(AssignNode), [], codeSequenceNode, IdentifierNode([], "Main", 0), 0)
-    astRoot = ASTNode(None, 0)
-    astRoot.globalVariables.append(mainFunction)
-    output = interpreterRun(astRoot)  
-     
-    check = getItemFromList(output.currentFunction.codeSequenceNode.LocalVariables, "Erkel")
-    if(check.value == 2553):
-        print("Test Assign Succeeded") 
-    else:
-        print("Test Assign Failed")
-    
-def TestReturnCorrectReturnType():    
-    VariableOne = IntegerNode(None, 5, IdentifierNode(None, "Erkel", 0), 0)
-    lineOne = ReturnNode(None, VariableOne, 0)
-    codeSequenceNode = CodeSequenceNode(None, [], [lineOne], 0)
-    codeSequenceNode.LocalVariables.append(VariableOne)
-    mainFunction = FunctionNode(None, IntegerNode, [], codeSequenceNode, IdentifierNode([], "Main", 0), 0)
-    astRoot = ASTNode(None, 0)
-    astRoot.globalVariables.append(mainFunction)
-    output = interpreterRun(astRoot)   
-    if(output.currentFunction.returnValue.value == 5):
-         print("Test return Succeeded") 
-    else:
-        print("Test return Failed")
-    return output
-       
         
-if __name__ == '__main__':
-    TestReturnCorrectReturnType()
-    TestAssign()
-    TestAssignFunction()
-
 
     
     
