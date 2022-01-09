@@ -35,27 +35,91 @@ from lexer import checkError
 #         self.identifier = identifier
         
 
-class Error:
+class ErrorClass():
     def __init__(self, what: str, where: str):
         self.what = what
         self.where = where
 
 
-def CreateIdentifierASTNode(token: Token, astRoot: ASTRoot):
+def CreateIdentifierASTNode(token: Token, tokens: Token, root: ASTRoot):
     node = IdentifierNode(None, token)
-    return node
+    if(tokens[0].type == "ParameterOpen"):
+        head, *tail  = tokens
+        node, tokens, error = ParseParameters(tail, root, ["NumericValue", "Identifier", "StringIndicator", "ParameterClose"])
+        return node, tokens, error
+    return node, tokens, []
 
+
+def CreateStringASTNode(tokens: list, root: ASTRoot):
+    if(tokens == None):
+        return [], [], ErrorClass("Expected a token", "End of File")
+    head, *tail = tokens
+    if(head.type == "Identifier" and tail[0].type == "StringIndicator"):
+        value = StringNode(None, head.value, None)
+        head, *tail = tail
+        return value, tail, None 
+    else:
+        return [], [], ErrorClass("Expected a string", len(root.tokens)- len(tokens))
+        
+
+
+def CreateAssignOperatorASTNode(tokens: list, left: PrimitiveNode, root: ASTNode):
+    if(tokens == None):
+        return [], [], Error("Expected a token", "End of File")
+    head, *tail = tokens
+    if(head.type in ["PrimitiveType", "NumericValue", "Identifier", "StringIndicator"]):
+        if(head.type == "PrimitiveType"):
+            node, tokens, error = CreatePrimitiveASTNode(head, tokens, root)
+        if(head.type == "NumericValue"):
+            node, tokens, error = CreateIntegerASTNode(head, tokens, root)
+        if(head.type == "Identifier"):
+            node, tokens, error = CreateIdentifierASTNode(head, tokens, root)
+        if(head.type == "StringIndicator"):
+            node, tokens, error = CreateStringASTNode(tokens, root)
+        if(error != None):
+            return [], [], error
+        output = AssignNode(None, left, node)
+        return output, tokens, []
+    
+
+def CreateIntegerASTNode(token: Token, tokens: list, root: ASTNode):
+    if(tokens == None):
+        return [], [], Error("Expected a token", "End of File")
+    if(token.type == "NumericValue"):
+        return IntegerNode(None, token, None), tokens, None
+    if(token.type == "Identifier"):
+        head, *tail = tokens
+        identifer, tokens, error = CreateIdentifierASTNode(head, tail, root)
+        if(error != None):
+            return [], [], error
+        head, *tail = tokens
+        if(head.type == "EndLine"):
+            return IntegerNode(None, None, identifer), tokens, error
+        if(head.type == "operator" and head.value == "<>"):
+            node, tokens, error = CreateAssignOperatorASTNode(tokens, token, root)
+            if(error != None):
+                return [], [], error
+            
+    
+
+def ParseParameters(tokens: list, root: ASTRoot, nextExpect: list = []):
+    if(tokens == None):
+        return [], [], ErrorClass("Expected a token", "End of File")
+    head, *tail = tokens
+    if(head.type in nextExpect):
+        if(head.type == "NumericValue"):
+            node, tokens, error = CreateIntegerASTNode(head, tail, root)
 
 
 def createErrorMessage(message: str, tokenNR: int, root: ASTRoot):
     tokensCopy = root.tokens.copy()
     tokensCopy.tokens[tokenNR].type = "Error"
-    return Error(message, checkError(tokensCopy))
+    return ErrorClass(message, checkError(tokensCopy))
         
 
 def CreateFunctionASTNode(tokens : list, root: ASTRoot):
     if(tokens == None):
-        return [], [], Error("Expected a token", "End of File")
+        return [], [], ErrorClass("Expected a token", "End of File")
     head, *tail = tokens
     identifier, tail, error = CreateIdentifierASTNode(head, root)
     if(error != None):
@@ -85,7 +149,7 @@ def CreateReturnTypeNode(tokens: list, root: ASTRoot):
 
 def ParseParametersDeclaration(tokens: list, root: ASTRoot, nextExpect: list = []):
     if(tokens == None):
-        return [], [], Error("Expected a token", "End of File")
+        return [], [], ErrorClass("Expected a token", "End of File")
     head, *tail = tokens
     if(head.type in nextExpect):
         if(head.type == "ParameterOpen"):
@@ -97,7 +161,9 @@ def ParseParametersDeclaration(tokens: list, root: ASTRoot, nextExpect: list = [
             nextExpect = ["Seperator", "ParameterClose"]
             node, tail, error = CreatePrimitiveASTNode(head, tail, root)
             if(error == None):
-                return list(node) + ParseParametersDeclaration(tail, root, nextExpect)
+                parameters, tokens, error = ParseParametersDeclaration(tail, root, nextExpect)
+                parameters += list(node)
+                return parameters, tokens, error
             return [], [], error
         elif(head.type == "Seperator"):
             nextExpect = ["PrimitiveType"]
@@ -113,25 +179,34 @@ def CreateParametersASTNode(tokens: list, root: ASTRoot):
     head, *tail = tokens
     if(head.type != "ParameterOpen"):
         return [], [], createErrorMessage("Syntax Error: Expected a parameter opening", len(root.tokens) - len(tokens), root)
-    return ParseParametersDeclaration(tail, root)
+    parameters, tokens, error = ParseParametersDeclaration(tail, root)
+    node = ParameterDeclarationNode(None, parameters, root)
+    return node, tokens, error
 
 def IdentifyASTNode(head: Token, tokens : list, root: ASTRoot) -> ASTNode:
     if(head == []):
-        return [], [], Error("Expected a token", "End of File")
+        return [], [], ErrorClass("Expected a token", "End of File")
     if(head.type == "PrimitiveType"):
         return CreatePrimitiveASTNode(head, tokens, root)
     
 #Hier was je maar je was zo moe dus je ging maar lekker slapen!
 def CreateCodeSequenceASTNode(tokens: list, root: ASTRoot, nextExpect: list):
     if(tokens == []):
-        return [], Error("Expected a token", "End of File")
+        return [], ErrorClass("Expected a token", "End of File")
     head, *tail = tokens
+    sequence = list(IdentifyASTNode())
     if(head.type in nextExpect):
         if(head.type == "OpeningContext"):
-            sequence = list(IdentifyASTNode())
-            newSequence, tail, error = CreateCodeSequenceASTNode
+            newSequence, tail, error = CreateCodeSequenceASTNode(tail, root, ["PrimitiveType", "Identifier", "ClosingContext"])
+            if(error != None):
+                return [], [], error
             return sequence + newSequence, tail, error
         if(head.type == "ClosingContext"):
+            return sequence, tail, None
+        if(head.type == "PrimitiveType"):
+            node, tail, error = CreatePrimitiveASTNode(head, tokens, root)
+        if(head.type == "Identifier"):
+            node, tail, error = CreateIdentifierASTNode(head, tokens, root)
         
     return [], [], []
 
