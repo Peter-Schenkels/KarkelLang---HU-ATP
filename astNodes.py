@@ -83,11 +83,11 @@ class KeywordNode(ASTNode):
     def __init__(self, parentNode: ASTNode, codeSequenceNode: CodeSequenceNode, lineNr: int):
         super().__init__(parentNode, lineNr)
         self.parentNode = parentNode
-        self.codeSequenceNode = CodeSequenceNode(self, [], codeSequenceNode, lineNr)
+        self.codeSequenceNode = codeSequenceNode
        
 class ReturnNode(KeywordNode):
     def __init__(self, parentNode: ASTNode, value: PrimitiveNode, lineNr: int):
-        super().__init__( parentNode, [], lineNr)
+        super().__init__( parentNode, None, lineNr)
         self.parentNode = parentNode
         self.value = value
 
@@ -111,8 +111,10 @@ class ComparisonNode(OperatorNode):
     def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
         super().__init__( parentNode, left, right, lineNr)
         
-
-
+class IfNode(KeywordNode):
+    def __init__(self, parentNode: ASTNode, comparison: ComparisonNode, codeSequenceNode: CodeSequenceNode, lineNr: int):
+        super().__init__( parentNode, codeSequenceNode, lineNr)
+        self.comparison = comparison
 
 
 
@@ -129,11 +131,6 @@ class ComparisonNode(OperatorNode):
 
 
 
-# class IfNode(KeywordNode):
-#     def __init__(self, parentNode: ASTNode, comparison: ComparisonNode, globalVariables: list, codeSequence: list):
-#         self.parentNode = parentNode
-#         self.comparison = comparison
-#         self.codeSequenceNode = CodeSequenceNode(self, globalVariables, codeSequence)
         
 # class ElseIfNode(IfNode):
 #     def __init__(self, parentNode: ASTNode, comparison: ComparisonNode, globalVariables: list, codeSequence: list, ifNode: IfNode):

@@ -119,6 +119,9 @@ def ExecuteAssignNode(node: AssignNode, context: FunctionNode, root: ASTRoot):
         return InterpreterObject(root, ErrorClass("Incorrect Assignation: ", node.lineNr))
     else:
         left = PopVariableFromContext(root.globalVariables, localVariables, context.parameters, node.left)
+        if(left.variable == None):
+            left.localVariables.append(node.left)
+            left.variable = node.left
         root.globalVariables = left.globalVariables
         localVariables = left.localVariables
         if(left == None ):
@@ -164,7 +167,7 @@ def ExecuteReturnNode(node: ReturnNode, context: FunctionNode, root: ASTRoot):
         returnValue = PopVariableFromContext(root.globalVariables, localVariables,context.parameters, node.value)
         root.globalVariables = returnValue.globalVariables
         localVariables = returnValue.localVariables
-        if(returnValue == None):
+        if(returnValue.variable == None):
             return InterpreterObject(root, ErrorClass("Incorrect return Value: ", node.lineNr), context) 
         if(context.returnType == type(returnValue.variable)):
             context.returnValue = returnValue.variable
@@ -185,25 +188,25 @@ def interpreter(node: FunctionNode, root: ASTRoot, error: ErrorClass = None) -> 
     if(error == None):
         if(node.codeSequenceNode.Sequence != []):
             head, *tail = node.codeSequenceNode.Sequence
+            node.codeSequenceNode.Sequence = tail
             if(head == []):
                 return InterpreterObject(node, root, None)
             if(type(head) == FunctionNode):
-                node.codeSequenceNode.Sequence = tail
                 output = interpreter(head, root, None)
                 return interpreter(node, output.root, output.error)
             if(type(head) == AssignNode):
-                node.codeSequenceNode.Sequence = tail
                 output = ExecuteAssignNode(head, node, root)
                 return interpreter(output.currentFunction, output.root, output.error)
             if(type(head) == ReturnNode):
-                node.codeSequenceNode.Sequence = tail
+                output = ExecuteReturnNode(head, node, root)
+                return interpreter(output.currentFunction, output.root, output.error)
+            if(type(head) == IfNode):
                 output = ExecuteReturnNode(head, node, root)
                 return interpreter(output.currentFunction, output.root, output.error)
         else:
             return InterpreterObject(root, None, node)
     else:
-        print(error.what)
-        print(error.where)
+        return InterpreterObject([], error, None)
     
 
 
