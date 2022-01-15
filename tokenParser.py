@@ -65,7 +65,7 @@ def CreateStringASTNode(tokens: list, root: ASTRoot):
 
 def CreateAssignOperatorASTNode(tokens: list, left: PrimitiveNode, root: ASTNode):
     if(tokens == None):
-        return [], [], Error("Expected a token", "End of File")
+        return [], [], ErrorClass("Expected a token", "End of File")
     head, *tail = tokens
     if(head.type in ["PrimitiveType", "NumericValue", "Identifier", "StringIndicator"]):
         if(head.type == "PrimitiveType"):
@@ -84,7 +84,7 @@ def CreateAssignOperatorASTNode(tokens: list, left: PrimitiveNode, root: ASTNode
 
 def CreateIntegerASTNode(token: Token, tokens: list, root: ASTNode):
     if(tokens == None):
-        return [], [], Error("Expected a token", "End of File")
+        return [], [], ErrorClass("Expected a token", "End of File")
     if(token.type == "NumericValue"):
         return IntegerNode(None, token, None), tokens, None
     if(token.type == "Identifier"):
@@ -175,7 +175,7 @@ def ParseParametersDeclaration(tokens: list, root: ASTRoot, nextExpect: list = [
 
 def CreateParametersASTNode(tokens: list, root: ASTRoot):
     if(tokens == []):
-        return [], [], Error("Expected a token", "End of File")
+        return [], [], ErrorClass("Expected a token", "End of File")
     head, *tail = tokens
     if(head.type != "ParameterOpen"):
         return [], [], createErrorMessage("Syntax Error: Expected a parameter opening", len(root.tokens) - len(tokens), root)

@@ -1,12 +1,19 @@
 from tokens import *
 from abc import ABC
 import jsonpickle
+from enum import Enum
+class Types (Enum):
+    STRING = 'string'
+    INTEGER = 'integer'
+    PRIMITIVE = 'primitive'
+
 
 class ASTNode(ABC):
     def __init__(self, parentNode, lineNr: int):
         self.lineNr = lineNr
         self.parentNode = parentNode
         self.globalVariables = []
+        self.code = []
     
     def __str__(self,):
         serialized = jsonpickle.encode(self)
@@ -27,11 +34,18 @@ class FunctionCallNode(IdentifierNode):
     def __init__(self, parentNode: ASTNode, name: str, parameters: ParameterIdentifierNode, lineNr: int):
         super().__init__(parentNode, name, lineNr)
         self.parameters = parameters
+
+class FunctionCallNode(IdentifierNode):
+    def __init__(self, parentNode: ASTNode, name: str, parameters: ParameterIdentifierNode, lineNr: int):
+        super().__init__(parentNode, name, lineNr)
+        self.parameters = parameters
+        
         
 class PrimitiveNode(ASTNode):
     def __init__(self, parentNode: ASTNode, identifier: IdentifierNode, lineNr: int):
         super().__init__(parentNode, lineNr)
         self.identifier = identifier
+        self.type = Types.PRIMITIVE
  
 class OperatorNode(ASTNode):
     def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
@@ -58,13 +72,12 @@ class CodeSequenceNode(ASTNode):
         self.LocalVariables = []
 
 class FunctionNode(ASTNode):
-    def __init__(self):
-        super().__init__(None, None, None)  
     
-    def __init__(self, parentNode: ASTNode, returnType: type, parameters: ParameterDeclarationNode, codeSequence: CodeSequenceNode, identifier: IdentifierNode, lineNr: int):
+    def __init__(self, parentNode: ASTNode, returnType: Types, parameterTypes: ParameterDeclarationNode, codeSequence: CodeSequenceNode, identifier: IdentifierNode, lineNr: int):
         super().__init__( parentNode, lineNr)
         self.returnType = returnType
-        self.parameters = parameters
+        self.parameterTypes = parameterTypes
+        self.parameters = []
         self.codeSequenceNode = codeSequence
         self.identifier = identifier
         self.returnValue = None
@@ -73,11 +86,24 @@ class IntegerNode(PrimitiveNode):
     def __init__(self, parentNode: ASTNode, value: int, identifier: IdentifierNode, lineNr: int):
         super().__init__( parentNode, identifier, lineNr)
         self.value = value
+        self.type = Types.INTEGER
 class StringNode(PrimitiveNode):   
     def __init__(self, parentNode : ASTNode, value: str, identifier: IdentifierNode, lineNr: int):
         super().__init__( parentNode, identifier, lineNr)
         self.value = value
-        self.identifier = identifier
+        self.type = Types.STRING
+class FunctionCallNode(PrimitiveNode):
+    def __init__(self, parentNode :ASTNode, value: FunctionNode, parameters: list, identifier: IdentifierNode, lineNr: int):
+        super().__init__( parentNode, identifier, lineNr)
+        self.value = value
+        self.parameters = parameters
+
+class FunctionDeclareNode(PrimitiveNode):
+    def __init__(self, parentNode :ASTNode, code: CodeSequenceNode, parameterTypes: ParameterDeclarationNode, identifier: IdentifierNode, returnType: type, lineNr: int):
+        super().__init__( parentNode, identifier, lineNr)
+        self.code = code
+        self.parameterTypes = parameterTypes
+        self.returnType = returnType
  
 class KeywordNode(ASTNode):
     def __init__(self, parentNode: ASTNode, codeSequenceNode: CodeSequenceNode, lineNr: int):
@@ -111,27 +137,23 @@ class ComparisonNode(OperatorNode):
     def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
         super().__init__( parentNode, left, right, lineNr)
         
+class ComparisonNodeGreaterThan(ComparisonNode):
+    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
+        super().__init__( parentNode, left, right, lineNr)
+        
+class ComparisonNodeSmallerThan(ComparisonNode):
+    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
+        super().__init__( parentNode, left, right, lineNr)
+        
+class ComparisonNodeNotEuqal(ComparisonNode):
+    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
+        super().__init__( parentNode, left, right, lineNr)
+        
 class IfNode(KeywordNode):
     def __init__(self, parentNode: ASTNode, comparison: ComparisonNode, codeSequenceNode: CodeSequenceNode, lineNr: int):
         super().__init__( parentNode, codeSequenceNode, lineNr)
         self.comparison = comparison
-
-
-
-
-
-        
-# class FunctionNode(PrimitiveNode):
-#     def __init__(self, parentNode: ASTNode, returnType: PrimitiveNode,  globalVariables: list, parameters: ParameterNode, codeSequence: list, identifier: IdentifierNode):
-#         self.parentNode = parentNode
-#         self.returnType = returnType
-#         self.codeSequenceNode = CodeSequenceNode(self, parameters + globalVariables, codeSequence)
-#         self.identifier = identifier
-        
-
-
-
-        
+       
 # class ElseIfNode(IfNode):
 #     def __init__(self, parentNode: ASTNode, comparison: ComparisonNode, globalVariables: list, codeSequence: list, ifNode: IfNode):
 #         self.parentNode = parentNode
@@ -146,7 +168,7 @@ class IfNode(KeywordNode):
 #         self.codeSequenceNode = CodeSequenceNode(self, globalVariables, codeSequence)
 
 class ASTRoot():
-    def __init__(self, tokens: list):
-        self.globalVariables = list(ASTNode)
-        self.codeSequenceNode = CodeSequenceNode(self, self.globalVariables, list(ASTNode))
+    def __init__(self):
+        self.globalVariables = []
+        self.codeSequenceNode = CodeSequenceNode(self, self.globalVariables, [], 0)
         self.tokens = tokens.copy()
