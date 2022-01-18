@@ -1,5 +1,6 @@
 
 import functools
+
 from tokens import *
 
 def split(input : str) ->list:
@@ -27,6 +28,17 @@ def checkError(input : list, lineNr : int = 1):
         lineNr += 1
     return checkError(tail, lineNr)
     
+def AddLineNr(tokens, lineNr=0):
+    if(tokens != []):
+        head, *tail = tokens
+        if(head.type == "NewLine"):
+            lineNr += 1
+            return AddLineNr(tail, lineNr)
+        else:
+            head.lineNr = lineNr
+        return [head] + list(AddLineNr(tail, lineNr))
+    return []
+    
 def lexer(input : str) -> list:
     patternInclusions = re.compile("(\d+|\w+|@|->|<-|<<|>>|<>|<|>|\"|!|\+|\-|&|\[|\]|\?:|\?|:|#|,|\n)")
     patternExlusions = re.compile("\s")
@@ -34,7 +46,7 @@ def lexer(input : str) -> list:
     if(len(mismatches) > 0):
         print("Uknown Token at line: " + str(countCharacterUntil(split(input), "\n", mismatches[0]) + 1))
         return []
-    tokens  = list(map(matchToken, patternInclusions.findall(input)))
+    tokens  = AddLineNr(list(map(matchToken, patternInclusions.findall(input))))
     lineNr = checkError(tokens)
     if(lineNr != 0):
         print("Invalid token at line: " + str(lineNr))

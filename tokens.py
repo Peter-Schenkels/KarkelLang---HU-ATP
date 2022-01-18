@@ -1,10 +1,18 @@
 import re
 import json
+import jsonpickle
+from enum import Enum
+
+class Types (Enum):
+    STRING = 'string'
+    INTEGER = 'integer'
+    PRIMITIVE = 'primitive'
 
 class Token():
     def __init__(self, type, value):
         self.type = type
         self.value = value
+        self.lineNr = 0
         
     def __str__(self):
         serialized = jsonpickle.encode(self)

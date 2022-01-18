@@ -26,203 +26,178 @@ from lexer import checkError
 #     "," : "Seperator",
 #     "\n" : "NewLine"   
 
-
-# class FunctionNode(PrimitiveNode):
-#     def __init__(self, parentNode: ASTNode, returnType: PrimitiveNode,  globalVariables: list, parameters: ParameterNode, codeSequence: list, identifier: IdentifierNode):
-#         self.parentNode = parentNode
-#         self.returnType = returnType
-#         self.codeSequenceNode = CodeSequenceNode(self, parameters + globalVariables, codeSequence)
-#         self.identifier = identifier
-        
-
 class ErrorClass():
     def __init__(self, what: str, where: str):
         self.what = what
         self.where = where
+        
+class ParserObject():
+    def __init__(self, head: Token, tail: list, error: ErrorClass, tokens: list, rootAST: ASTRoot, currentFunctionDeclarationNode: FunctionNode):
+        self.head = head
+        self.tail = tail.copy()
+        self.error = error
+        self.tokens = tokens.copy()
+        self.rootAST = rootAST
+        self.currentFunctionDeclarationNode = currentFunctionDeclarationNode
+        
+    def getCurrentTokenIndex(self):
+        return len(self.tokens) - len(self.tail)
+             
+def MoveForward(context: ParserObject):
+    context.head, *context.tail = context.tail
+    return context        
 
+def GetExpectedParameterTokens(token: Token):
+    ParameterExpectedTokes = {
+        "ParameterOpen" : ["ParameterClose", "PrimitiveType"],
+        "PrimitiveType" : ["Identifier"],
+        "Identifier" : ["ParameterClose", "Seperator"],
+        "Seperator" : ["PrimitiveType"],
+        "ParameterClose" : ["ContextOpen"]        
+    }
+    return ParameterExpectedTokes[token.type]
 
-def CreateIdentifierASTNode(token: Token, tokens: Token, root: ASTRoot):
-    node = IdentifierNode(None, token)
-    if(tokens[0].type == "ParameterOpen"):
-        head, *tail  = tokens
-        node, tokens, error = ParseParameters(tail, root, ["NumericValue", "Identifier", "StringIndicator", "ParameterClose"])
-        return node, tokens, error
-    return node, tokens, []
-
-
-def CreateStringASTNode(tokens: list, root: ASTRoot):
-    if(tokens == None):
-        return [], [], ErrorClass("Expected a token", "End of File")
-    head, *tail = tokens
-    if(head.type == "Identifier" and tail[0].type == "StringIndicator"):
-        value = StringNode(None, head.value, None)
-        head, *tail = tail
-        return value, tail, None 
+def ParseParameterTypes(context: ParserObject, expectedParameters: list=["ParameterClose", "PrimitiveType"]) -> ParserObject:
+    if(context.head.type in expectedParameters):
+        expectedParameters = GetExpectedParameterTokens(context.head)
+        if(context.head.type == "PrimitiveType"):
+            if(context.head.value == "@"):
+                context = MoveForward(context)
+                if(context.head.type in expectedParameters):
+                    context.currentFunctionDeclarationNode.parameterTypes.append(StringNode(None, None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr))
+            elif(context.head.value == "#"):
+                context = MoveForward(context)
+                if(context.head.type in expectedParameters):
+                    context.currentFunctionDeclarationNode.parameterTypes.append(IntegerNode(None, None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr))        
+            else:
+                context.error = ErrorClass("Unexpected token in function parameter declaration", context.head.lineNr)
+                return context
+            expectedParameters = GetExpectedParameterTokens(context.head)
+            context = MoveForward(context)
+            return ParseParameterTypes(context, expectedParameters)
+        elif(context.head.type == "Seperator"):
+            expectedParameters = GetExpectedParameterTokens(context.head)
+            context = MoveForward(context)
+            return ParseParameterTypes(context, expectedParameters)
+        elif(context.head.type == "ParameterClose"):
+            context = MoveForward(context)
+            return context
     else:
-        return [], [], ErrorClass("Expected a string", len(root.tokens)- len(tokens))
+        context.error = ErrorClass("Unexpected token in function parameter declaration", context.head.lineNr)
+        return context
         
+def ParseFunctionDeclaration(context: ParserObject) -> ParserObject:  
+    if(context.currentFunctionDeclarationNode == None):
+        context.currentFunctionDeclarationNode = FunctionDeclareNode(context.rootAST, [], [], None, None, context.head.lineNr)
+        context = MoveForward(context)
+        if(context.head.type == "Identifier"):
+            context.currentFunctionDeclarationNode.identifier = IdentifierNode(context.rootAST, context.head.value, context.head.lineNr)
+            context = MoveForward(context)
+            if(context.head.type == "ParameterOpen"):
+                context = MoveForward(context)
+                context = ParseParameterTypes(context)
+                if(context.head.type == "Assignment"):
+                    context = MoveForward(context)
+                    if(context.head.type == "PrimitiveType"):
+                        context.currentFunctionDeclarationNode.returnType = Types.INTEGER if context.head.value == "#" else Types.STRING
+                        context = MoveForward(context)
+                        if(context.head.type == "ContextOpen"):
+                            context = TokensToAST(MoveForward(context))
+                            context.rootAST.codeSequenceNode.Sequence.append(context.currentFunctionDeclarationNode)
+                            context.currentFunctionDeclarationNode = None
+                            return TokensToAST(context)
+                        else:
+                            context.error = ErrorClass("Function declaration error: Expected a context open token, got %s" % context.head.type, context.head.lineNr)
+                            return context
+                    else:
+                        context.error = ErrorClass("Function declaration error: Expected a return type, got %s" % context.head.type, context.head.lineNr)
+                        return context
+                else:
+                    context.error = ErrorClass("Function Declaration error: Expected Assignment token, got %s" % context.head.type, context.head.lineNr)
+                    return context
+            else:
+                context.error = ErrorClass("Function Declaration error: Expected a Parameter Open token, got %s" % context.head.type, context.head.lineNr)
+                return context
+        else:
+            context.error = ErrorClass("Function Declaration error: Expected a function identifier, got %s" % context.head.type, context.head.lineNr)
+            return context
+    else:
+        context.error = ErrorClass("Function Declaration error: Can't declare function inside a function", context.head.lineNr)
+        return context         
 
-
-def CreateAssignOperatorASTNode(tokens: list, left: PrimitiveNode, root: ASTNode):
-    if(tokens == None):
-        return [], [], ErrorClass("Expected a token", "End of File")
-    head, *tail = tokens
-    if(head.type in ["PrimitiveType", "NumericValue", "Identifier", "StringIndicator"]):
-        if(head.type == "PrimitiveType"):
-            node, tokens, error = CreatePrimitiveASTNode(head, tokens, root)
-        if(head.type == "NumericValue"):
-            node, tokens, error = CreateIntegerASTNode(head, tokens, root)
-        if(head.type == "Identifier"):
-            node, tokens, error = CreateIdentifierASTNode(head, tokens, root)
-        if(head.type == "StringIndicator"):
-            node, tokens, error = CreateStringASTNode(tokens, root)
-        if(error != None):
-            return [], [], error
-        output = AssignNode(None, left, node)
-        return output, tokens, []
+def ParseNewAssignment(context: ParserObject):
+    if(context.head.value == "#"):
+        left = IntegerNode()
+        right = IntegerNode(None, 0, None, context.head.line)
+    elif(context.head.value == "@"):
+        left = StringNode()
+        right = StringNode(None, "", None, context.head.line)
+    else:
+        context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
+        return context
+    context = MoveForward(context)
+    if(context.head.type == "Identifier"):
+        left.identifier = IdentifierNode(None, context.head.value, context.head.lineNr)
+        context = MoveForward(context)
+        if(context.head.type =="Assignment"):
+            return #DO STUFF
+        elif(context.head.type == "Endline"):
+            assignNode = AssignNode(None, left, right, context.head.lineNr)
+            context.currentFunctionDeclarationNode.codeSequenceNode.Sequence.append(assignNode)
+            context = MoveForward(context)
+            return context
+        else:
+            context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
+            return context
+    else:
+        context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
+        return context
     
+def ParseAssignment(context: ParserObject):   
+    return 
 
-def CreateIntegerASTNode(token: Token, tokens: list, root: ASTNode):
-    if(tokens == None):
-        return [], [], ErrorClass("Expected a token", "End of File")
-    if(token.type == "NumericValue"):
-        return IntegerNode(None, token, None), tokens, None
-    if(token.type == "Identifier"):
-        head, *tail = tokens
-        identifer, tokens, error = CreateIdentifierASTNode(head, tail, root)
-        if(error != None):
-            return [], [], error
-        head, *tail = tokens
-        if(head.type == "EndLine"):
-            return IntegerNode(None, None, identifer), tokens, error
-        if(head.type == "operator" and head.value == "<>"):
-            node, tokens, error = CreateAssignOperatorASTNode(tokens, token, root)
-            if(error != None):
-                return [], [], error
-            
-    
-
-def ParseParameters(tokens: list, root: ASTRoot, nextExpect: list = []):
-    if(tokens == None):
-        return [], [], ErrorClass("Expected a token", "End of File")
-    head, *tail = tokens
-    if(head.type in nextExpect):
-        if(head.type == "NumericValue"):
-            node, tokens, error = CreateIntegerASTNode(head, tail, root)
-
-
-def createErrorMessage(message: str, tokenNR: int, root: ASTRoot):
-    tokensCopy = root.tokens.copy()
-    tokensCopy.tokens[tokenNR].type = "Error"
-    return ErrorClass(message, checkError(tokensCopy))
-        
-
-def CreateFunctionASTNode(tokens : list, root: ASTRoot):
-    if(tokens == None):
-        return [], [], ErrorClass("Expected a token", "End of File")
-    head, *tail = tokens
-    identifier, tail, error = CreateIdentifierASTNode(head, root)
-    if(error != None):
-        return [], [], error
-    parameters, tail, error = CreateParametersASTNode(tail, root, ["ParameterOpen"])
-    if(error != None):
-        return [], [], error
-    returnType, tail, error = CreateReturnTypeNode(tail, root)
-    if(error != None):
-        return [], [], error
-    codeSequence, tail, error = CreateCodeSequenceASTNode(tail, root, ["OpeningContext"])
-    if(error != None):
-        return [], [], error
-
-def CreatePrimitiveASTNode(token: Token, tokens : list, root: ASTRoot):
-    if(token.value == "@"):
-        node, tokens, error = CreateFunctionASTNode(tokens, root)
+def ParseKeyword(context: ParserObject):
+    ExpectedTokens = ["Identifier", "PrimitiveType"]
+    context = MoveForward(context)
+    if(context.head.type == "Identifier"):
+        left = IdentifierNode(None, context.head.value, context.head.lineNr)
+    elif(context.head.type == "PrimitiveType"):
+        if(context.head.value == "#"):
+            left = IntegerNode(None, context.head.value, None, context.head.lineNr)
+        if(context.head.value == "@"):
+            left = StringNode(None, context.head.value, None, context.head.lineNr)
+        context = MoveForward(context)
+        if(context.head.type == "Operator"):
+            if(context.head.value == "<<"):
+                comparison = ComparisonNodeSmallerThan(None, left, None, context.head.lineNr)    
+                
     return
 
-def CreateReturnTypeNode(tokens: list, root: ASTRoot):
-    head, *tail = tokens
-    if(head.type != "ReturnType"):
-        head, *tail = tail
-        return CreatePrimitiveASTNode(head, tail, root)
-    else:
-        return [], [], createErrorMessage("Token is not a ReturnType", len(root.tokens) - len(tokens), root)
-
-def ParseParametersDeclaration(tokens: list, root: ASTRoot, nextExpect: list = []):
-    if(tokens == None):
-        return [], [], ErrorClass("Expected a token", "End of File")
-    head, *tail = tokens
-    if(head.type in nextExpect):
-        if(head.type == "ParameterOpen"):
-            nextExpect = ["PrimitiveType", "ParameterClose"]
-            return ParseParametersDeclaration(tail, root, nextExpect)
-        elif(head.type == "ParameterClose"):
-            return None, tail, None
-        elif(head.type == "PrimitiveType"):
-            nextExpect = ["Seperator", "ParameterClose"]
-            node, tail, error = CreatePrimitiveASTNode(head, tail, root)
-            if(error == None):
-                parameters, tokens, error = ParseParametersDeclaration(tail, root, nextExpect)
-                parameters += list(node)
-                return parameters, tokens, error
-            return [], [], error
-        elif(head.type == "Seperator"):
-            nextExpect = ["PrimitiveType"]
-            return ParseParametersDeclaration(tail, root, nextExpect)
-        else:
-            return [], [], createErrorMessage("Unknown error",  len(root.tokens) - len(tokens), root)
-    else:
-        return [], [], createErrorMessage("Excpected a " + head.type,  len(root.tokens) - len(tokens), root)
-
-def CreateParametersASTNode(tokens: list, root: ASTRoot):
-    if(tokens == []):
-        return [], [], ErrorClass("Expected a token", "End of File")
-    head, *tail = tokens
-    if(head.type != "ParameterOpen"):
-        return [], [], createErrorMessage("Syntax Error: Expected a parameter opening", len(root.tokens) - len(tokens), root)
-    parameters, tokens, error = ParseParametersDeclaration(tail, root)
-    node = ParameterDeclarationNode(None, parameters, root)
-    return node, tokens, error
-
-def IdentifyASTNode(head: Token, tokens : list, root: ASTRoot) -> ASTNode:
-    if(head == []):
-        return [], [], ErrorClass("Expected a token", "End of File")
-    if(head.type == "PrimitiveType"):
-        return CreatePrimitiveASTNode(head, tokens, root)
+def TokensToAST(input: ParserObject) -> ParserObject: 
     
-#Hier was je maar je was zo moe dus je ging maar lekker slapen!
-def CreateCodeSequenceASTNode(tokens: list, root: ASTRoot, nextExpect: list):
-    if(tokens == []):
-        return [], ErrorClass("Expected a token", "End of File")
-    head, *tail = tokens
-    sequence = list(IdentifyASTNode())
-    if(head.type in nextExpect):
-        if(head.type == "OpeningContext"):
-            newSequence, tail, error = CreateCodeSequenceASTNode(tail, root, ["PrimitiveType", "Identifier", "ClosingContext"])
-            if(error != None):
-                return [], [], error
-            return sequence + newSequence, tail, error
-        if(head.type == "ClosingContext"):
-            return sequence, tail, None
-        if(head.type == "PrimitiveType"):
-            node, tail, error = CreatePrimitiveASTNode(head, tokens, root)
-        if(head.type == "Identifier"):
-            node, tail, error = CreateIdentifierASTNode(head, tokens, root)
-        
-    return [], [], []
+    ParserFunctions = {
+    "FunctionDeclaration": ParseFunctionDeclaration,
+    "PrimitiveType" : ParseNewAssignment,
+    "Identifier" : ParseAssignment,
+    "KeyWord"    : ParseKeyword
+    }
+    
+    if(input.error != None):
+        return input
+    if(input.tail != []):
+        if(input.head.type in ParserFunctions):
+            input = TokensToAST(ParserFunctions[input.head.type](input))
+        else:
+            input.error = ErrorClass("Unexpected Token", input.getCurrentTokenIndex())
+            return input
+    return input;
 
-
-def parser(tokens : list, root: ASTRoot):
-    if(input == []):
-        return True
+def parse(tokens : list)->ASTRoot:
+    root = ASTRoot()
     head, *tail = tokens
-    node, tail, error = IdentifyASTNode(head, tail,  root)
-    if(error != None):
-        print(error.what)
-        print(error.where)
+    context = ParserObject(head, tail, None, tokens, root, None)
+    context = TokensToAST(context)
+    if(context.error != None):
+        print(context.error.what)
+        print("On LineNr: " + str(context.error.where))
         return False
-    root.codeSequenceNode.Sequence.append(node)
-    return parser(tokens, root)
-
-def parse(tokens : list):
-    root = ASTRoot(tokens)
-    parser(tokens, root)

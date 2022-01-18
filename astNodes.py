@@ -2,10 +2,7 @@ from tokens import *
 from abc import ABC
 import jsonpickle
 from enum import Enum
-class Types (Enum):
-    STRING = 'string'
-    INTEGER = 'integer'
-    PRIMITIVE = 'primitive'
+
 
 
 class ASTNode(ABC):
@@ -153,19 +150,6 @@ class IfNode(KeywordNode):
     def __init__(self, parentNode: ASTNode, comparison: ComparisonNode, codeSequenceNode: CodeSequenceNode, lineNr: int):
         super().__init__( parentNode, codeSequenceNode, lineNr)
         self.comparison = comparison
-       
-# class ElseIfNode(IfNode):
-#     def __init__(self, parentNode: ASTNode, comparison: ComparisonNode, globalVariables: list, codeSequence: list, ifNode: IfNode):
-#         self.parentNode = parentNode
-#         self.comparison = comparison
-#         self.ifNode = ifNode
-#         self.codeSequenceNode = CodeSequenceNode(self, globalVariables, codeSequence)
-    
-# class ElseNode(KeywordNode):
-#     def __init__(self, parentNode: ASTNode, globalVariables: list, codeSequence: list, ifNode: IfNode):
-#         self.parentNode = parentNode
-#         self.ifNode = ifNode
-#         self.codeSequenceNode = CodeSequenceNode(self, globalVariables, codeSequence)
 
 class ASTRoot():
     def __init__(self):
