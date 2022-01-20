@@ -1,7 +1,7 @@
 
 
 
-& sukkel [ # input, @ arkel ] -> @
+& Main [ # input, @ arkel ] -> @
 <
     @ output!
 

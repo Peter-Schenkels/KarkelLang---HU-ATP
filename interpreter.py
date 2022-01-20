@@ -44,7 +44,7 @@ class OperatorObject():
 def GetVariableFromContext(globalVariables: list, localVariables: list, parameters: list, name: PrimitiveNode) -> VariableObject:
     output = VariableObject(None, None, None, None)
     if(name.identifier == None):
-            output.variable = name
+        output.variable = name
     elif(getIndexFromList(localVariables, name.identifier.value) >= 0):
         output.variable = localVariables[getIndexFromList(localVariables, name.identifier.value)]
     elif(getIndexFromList(globalVariables, name.identifier.value) >= 0):
@@ -68,7 +68,6 @@ def GetListOfVariablesFromContext(variables: list, globalVariables: list, localV
     else:
         return []
         
-
 def PopVariableFromContext(globalVariables: list, localVariables: list, parameters: list, name: PrimitiveNode) -> VariableObject:
     output = VariableObject(None, None, None, None)
     if(name.identifier == None):
@@ -100,26 +99,29 @@ def ExecuteOperator(node: OperatorNode, context: FunctionNode, root: ASTRoot) ->
     output = OperatorObject(None ,None)
     if(type(left.variable) == type(right.variable)):
         if(type(node) == AdditionNode):
-            if(type(left.variable) in [IntegerNode, StringNode]):
-                node.left.value = node.left.value + node.right.value
+            if(type(left.variable) is IntegerNode):
+                node.left.value = int(left.variable.value) + int(right.variable.value)
+                output.output = node.left
+            elif(type(left.variable) is IntegerNode):
+                node.left.value = left.variable.value + right.variable.value
                 output.output = node.left
             else:
                 output.error = ErrorClass("Addition not available for this type", node.lineNr)
         elif(type(node) == SubtractionNode):
-            if(type(left.variable) in [IntegerNode, StringNode]):
-                node.left.value = node.left.value + node.right.value
+            if(type(left.variable) in [IntegerNode]):
+                node.left.value = int(node.left.value) - int(node.right.value)
                 output.output = node.left
             else:
                 output.error = ErrorClass("Subtraction not available for this type", node.lineNr)
         elif(type(node) == MultiplicationNode):
             if(type(left.variable) in [IntegerNode]):
-                node.left.value = node.left.value * node.right.value
+                node.left.value = int(node.left.value) * int(node.right.value)
                 output.output = node.left
             else:
                 output.error = ErrorClass("Multiplication not available for this type", node.lineNr)
         elif(type(node) == DivisionNode):
             if(type(left.variable) in [IntegerNode]):
-                node.left.value = node.left.value / node.right.value
+                node.left.value = int(node.left.value) / int(node.right.value)
                 output.output = node.left
             else:
                 output.error = ErrorClass("Division not available for this type", node.lineNr)
@@ -206,7 +208,7 @@ def ExecuteAssignNode(node: AssignNode, context: FunctionNode, root: ASTRoot):
             else:
                 InterpreterObject(root, output.error, context)
                 
-        if(type(left.variable) == type(right.variable)):
+        if(type(left.variable.value) == type(right.variable.value) or type(left.variable) == type(right.variable)):
             left.variable.value = right.variable.value
             if(left.local):
                 localVariables.append(left.variable)
@@ -272,7 +274,7 @@ def interpreterRun(root: ASTRoot, error: ErrorClass = None) -> InterpreterObject
 
 def ExecuteFunctionDeclareNode(node: FunctionDeclareNode, context: FunctionNode, root: ASTRoot):
     if(context == None):
-        function = FunctionNode(None, node.returnType, node.parameterTypes, CodeSequenceNode(None, None, node.code, node.lineNr), node.identifier, node.lineNr)
+        function = FunctionNode(None, node.returnType, node.parameterTypes, CodeSequenceNode(None, None, node.code.Sequence, node.lineNr), node.identifier, node.lineNr)
         root.globalVariables.append(function)
         return InterpreterObject(root, None, None)
     else:

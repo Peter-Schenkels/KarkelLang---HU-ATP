@@ -1,18 +1,5 @@
 from interpreter import *
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    
-
-    
 def TestAssignFunction():    
     returnVariable = IntegerNode(None, 69, IdentifierNode(None, "jerkel", 0), 0)
     lineOne = ReturnNode(None, returnVariable, 0)
@@ -60,7 +47,7 @@ def TestAssignOperator():
 def TestAssign():        
     VariableOne = IntegerNode(None, 5, IdentifierNode(None, "Erkel", 0), 0)
     VariableTwo = IntegerNode(None, 2553, IdentifierNode(None, "jerkel", 0), 0)
-    lineOne = AssignNode(None, IntegerNode(None, None, IdentifierNode(None, "Erkel", 0), 0), IntegerNode(None, None, IdentifierNode(None, "jerkel", 0), 0 ), 0)
+    lineOne = AssignNode(None, PrimitiveNode(None, IdentifierNode(None, "Erkel", 0), 0), PrimitiveNode(None, IdentifierNode(None, "jerkel", 0), 0 ), 0)
     codeSequenceNode = CodeSequenceNode(None, [], [lineOne], 0)
     codeSequenceNode.LocalVariables.append(VariableOne)
     codeSequenceNode.LocalVariables.append(VariableTwo)
@@ -208,10 +195,10 @@ def TestIfStatementNotTrue():
 
 def TestReturnParameter():
     returnNode = ReturnNode(None, IntegerNode(None, None, IdentifierNode(None, "Arkel", 0), 0), 0)
-    declarationFunction = FunctionDeclareNode(None, [returnNode], [IntegerNode(None, None, IdentifierNode(None, "Arkel", 0), 0)], IdentifierNode(None, "Func", 0), Types.INTEGER, 0  )
+    declarationFunction = FunctionDeclareNode(None, CodeSequenceNode(None, [], [returnNode], 0), [IntegerNode(None, None, IdentifierNode(None, "Arkel", 0), 0)], IdentifierNode(None, "Func", 0), Types.INTEGER, 0  )
     assign = AssignNode(None, IntegerNode(None, None, IdentifierNode(None, "Arkel", 0), 0), IntegerNode(None, 69, None, 0), 0)
     functionCall = FunctionCallNode(None, None, [IntegerNode(None, None, IdentifierNode(None, "Arkel", 0), 0)], IdentifierNode(None, "Func", 0), 0)
-    declarationMain = FunctionDeclareNode(None, [assign, functionCall], [IntegerNode(None, None, IdentifierNode(None, "Jerkelton", 0), 0)], IdentifierNode(None, "Main", 0), Types.INTEGER, 0  )  
+    declarationMain = FunctionDeclareNode(None, CodeSequenceNode(None, [], [assign, functionCall], 0), [IntegerNode(None, None, IdentifierNode(None, "Jerkelton", 0), 0)], IdentifierNode(None, "Main", 0), Types.INTEGER, 0  )  
     
     astRoot = ASTRoot()
    
