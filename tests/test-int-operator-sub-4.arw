@@ -1,0 +1,7 @@
+& Main [] X #
+<
+    # valuex <- 13!
+    # valuey <- 3!
+    # output <- valuex - valuey!
+    output -> !
+>

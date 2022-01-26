@@ -137,14 +137,17 @@ def ParseFunctionDeclaration(context: ParserObject) -> ParserObject:
         return context         
 
 def ParseAssignment(context: ParserObject):
+    declaration = False
     if(context.head.value == "#"):
         left = IntegerNode(None, None, None, context.head.lineNr)
         right = IntegerNode(None, 0, None, context.head.lineNr)
         context = MoveForward(context)
+        declaration = True
     elif(context.head.value == "@"):
         left = StringNode(None, None, None, context.head.lineNr)
         right = StringNode(None, "", None, context.head.lineNr)
         context = MoveForward(context)
+        declaration = True
     elif(context.head.type == "Identifier"):
         left = PrimitiveNode(None, None, context.head.lineNr)
         right = PrimitiveNode(None, IdentifierNode(None, None, context.head.lineNr), context.head.lineNr)
@@ -169,9 +172,9 @@ def ParseAssignment(context: ParserObject):
                     context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
                     return context
             elif(context.head.type == "NumericValue"):
-                right.value = context.head.value
+                right = IntegerNode(None, int(context.head.value), None, context.head.lineNr)
             elif(context.head.type == "Identifier"):
-                right.identifier.value = context.head.value
+                right = PrimitiveNode(None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
             else:
                 context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
                 return context
@@ -218,12 +221,13 @@ def ParseAssignment(context: ParserObject):
            rightOperatorValue = IntegerNode(None, context.head.value, None, context.head.lineNr)
            context = MoveForward(context)
         elif(context.head.type == "Identifier"):
-            rightOperatorValue = context.head.value
+            rightOperatorValue = PrimitiveNode(None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
+            context = MoveForward(context)
         else:
             context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
             return context
         right.right = rightOperatorValue
-    assignNode = AssignNode(None, left, right, context.head.lineNr)   
+    assignNode = AssignNode(None, left, right, context.head.lineNr, declaration)   
     return CheckEndlineAppendNode(assignNode, context)
 
 def ParseKeyword(context: ParserObject):

@@ -52,8 +52,9 @@ class OperatorNode(ASTNode):
         self.output = None
         
 class AssignNode(OperatorNode):
-    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
+    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode,  lineNr: int, declaration: bool=False):
         super().__init__(parentNode, left, right, lineNr)
+        self.declaration = declaration
 
 class ParameterDeclarationNode(ASTNode):
     def __init__(self, parentNode: ASTNode, parameters: list, lineNr: int):

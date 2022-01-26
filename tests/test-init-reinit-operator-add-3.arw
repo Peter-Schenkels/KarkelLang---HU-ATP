@@ -1,0 +1,7 @@
+& Main [] X #
+<
+    # output <- 4 + 1!
+    # value <- 5!
+    output <- value + output!
+    output -> !
+>

@@ -43,7 +43,7 @@ class OperatorObject():
  
 def GetVariableFromContext(globalVariables: list, localVariables: list, parameters: list, name: PrimitiveNode) -> VariableObject:
     output = VariableObject(None, None, None, None)
-    if(name.identifier == None):
+    if(name.identifier == None or name.identifier.value == None):
         output.variable = name
     elif(getIndexFromList(localVariables, name.identifier.value) >= 0):
         output.variable = localVariables[getIndexFromList(localVariables, name.identifier.value)]
@@ -51,6 +51,11 @@ def GetVariableFromContext(globalVariables: list, localVariables: list, paramete
         output.variable = globalVariables[getIndexFromList(globalVariables, name.identifier.value)]
     elif(getIndexFromList(parameters, name.identifier.value) >= 0):
         output.variable = parameters[getIndexFromList(parameters, name.identifier.value)]
+    if(output.variable != None):
+        if(output.variable.type == Types.INTEGER):
+            output.variable.value = int(output.variable.value)
+        elif(output.variable.type == Types.STRING):
+            output.variable.value = str(output.variable.value)
     return output   
 
 def GetListOfVariablesFromContext(variables: list, globalVariables: list, localVariables: list, parameters: list) -> list:
@@ -81,7 +86,11 @@ def PopVariableFromContext(globalVariables: list, localVariables: list, paramete
     elif(getIndexFromList(parameters, name.identifier.value) >= 0):
         output.variable = parameters[getIndexFromList(parameters, name.identifier.value)]
         output.local = None
-
+    if(output.variable != None):
+        if(output.variable.type == Types.INTEGER):
+            output.variable.value = int(output.variable.value)
+        elif(output.variable.type == Types.STRING):
+            output.variable.value = str(output.variable.value)
     output.localVariables = localVariables
     output.globalVariables = globalVariables
     return output
@@ -100,52 +109,52 @@ def ExecuteOperator(node: OperatorNode, context: FunctionNode, root: ASTRoot) ->
     if(type(left.variable) == type(right.variable)):
         if(type(node) == AdditionNode):
             if(type(left.variable) is IntegerNode):
-                node.left.value = int(left.variable.value) + int(right.variable.value)
+                node.left = IntegerNode(None, int(left.variable.value) + int(right.variable.value), None, node.lineNr)
                 output.output = node.left
-            elif(type(left.variable) is IntegerNode):
-                node.left.value = left.variable.value + right.variable.value
+            elif(type(left.variable) is StringNode):
+                node.left = StringNode(None, str(left.variable.value) + str(right.variable.value), None, node.lineNr)
                 output.output = node.left
             else:
                 output.error = ErrorClass("Addition not available for this type", node.lineNr)
         elif(type(node) == SubtractionNode):
             if(type(left.variable) in [IntegerNode]):
-                node.left.value = int(node.left.value) - int(node.right.value)
+                node.left = IntegerNode(None, int(left.variable.value) - int(right.variable.value), None, node.lineNr)
                 output.output = node.left
             else:
                 output.error = ErrorClass("Subtraction not available for this type", node.lineNr)
         elif(type(node) == MultiplicationNode):
             if(type(left.variable) in [IntegerNode]):
-                node.left.value = int(node.left.value) * int(node.right.value)
+                node.left = IntegerNode(None, int(left.variable.value) * int(right.variable.value), None, node.lineNr)
                 output.output = node.left
             else:
                 output.error = ErrorClass("Multiplication not available for this type", node.lineNr)
         elif(type(node) == DivisionNode):
             if(type(left.variable) in [IntegerNode]):
-                node.left.value = int(node.left.value) / int(node.right.value)
+                node.left = IntegerNode(None, int(left.variable.value) / int(right.variable.value), None, node.lineNr)
                 output.output = node.left
             else:
                 output.error = ErrorClass("Division not available for this type", node.lineNr)
         elif(type(node) == ComparisonNode):
             if(type(left.variable) in [IntegerNode, StringNode]):
-                node.left.value = node.left.value == node.right.value
+                node.left = IntegerNode(None, left.variable.value == right.variable.value, None, node.lineNr)
                 output.output = node.left
             else:
                 output.error = ErrorClass("Comparison not available for this type", node.lineNr)
         elif(type(node) == ComparisonNodeGreaterThan):
-            if(type(left.variable) in [IntegerNode, StringNode]):
-                node.left.value = node.left.value > node.right.value
+            if(type(left.variable) in [IntegerNode]):
+                node.left = IntegerNode(None, int(left.variable.value) > int(right.variable.value), None, node.lineNr)
                 output.output = node.left
             else:
                 output.error = ErrorClass("Comparison not available for this type", node.lineNr)
         elif(type(node) == ComparisonNodeSmallerThan):
-            if(type(left.variable) in [IntegerNode, StringNode]):
-                node.left.value = node.left.value < node.right.value
+            if(type(left.variable) in [IntegerNode]):
+                node.left = IntegerNode(None, int(left.variable.value) < int(right.variable.value), None, node.lineNr)
                 output.output = node.left
             else:
                 output.error = ErrorClass("Comparison not available for this type", node.lineNr)
         elif(type(node) == ComparisonNodeNotEuqal):
             if(type(left.variable) in [IntegerNode, StringNode]):
-                node.left.value = node.left.value != node.right.value
+                node.left = IntegerNode(None, left.variable.value != right.variable.value, None, node.lineNr)
                 output.output = node.left
             else:
                 output.error = ErrorClass("Comparison not available for this type", node.lineNr)
@@ -168,12 +177,14 @@ def ExecuteAssignNode(node: AssignNode, context: FunctionNode, root: ASTRoot):
     if(node.left == None or node.right == None):
         return InterpreterObject(root, ErrorClass("Incorrect Assignation: ", node.lineNr))
     else:
-        left = PopVariableFromContext(root.globalVariables, localVariables, parameters, node.left)
+        left = GetVariableFromContext(root.globalVariables, localVariables, parameters, node.left)
         if(left.variable == None):
-            left.localVariables.append(node.left)
-            left.variable = node.left
-        root.globalVariables = left.globalVariables
-        localVariables = left.localVariables
+            if(node.declaration):
+                left.variable = node.left
+                left.local = context != None
+            else:
+                return InterpreterObject(root, ErrorClass("Undefined variable: " +  node.left.identifier.value, node.lineNr))
+
         if(left == None ):
             return InterpreterObject(root, ErrorClass("Incorrect Assignation, left doesn't exist: ", node.lineNr))
         
@@ -208,9 +219,12 @@ def ExecuteAssignNode(node: AssignNode, context: FunctionNode, root: ASTRoot):
             else:
                 InterpreterObject(root, output.error, context)
                 
-        if(type(left.variable.value) == type(right.variable.value) or type(left.variable) == type(right.variable)):
+        if(type(left.variable) == type(right.variable) or type(left.variable.value) == type(right.variable.value)):
             left.variable.value = right.variable.value
             if(left.local):
+                output = PopVariableFromContext(root.globalVariables, localVariables, parameters, node.left)
+                root.globalVariables = output.globalVariables
+                localVariables = output.localVariables
                 localVariables.append(left.variable)
             elif(not local or context == None):
                 root.globalVariables.append(left.variable)
