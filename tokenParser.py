@@ -136,6 +136,29 @@ def ParseFunctionDeclaration(context: ParserObject) -> ParserObject:
         context.error = ErrorClass("Function Declaration error: Can't declare function inside a function", context.head.lineNr)
         return context         
 
+#Returns operator node based on token
+def ParseOperator(context: ParserObject, right: PrimitiveNode) -> OperatorNode: 
+    if(context.head.value == "+"):
+        right = AdditionNode(None, right, None, context.head.lineNr)
+    elif(context.head.value == "-"):
+        right = SubtractionNode(None, right, None, context.head.lineNr)
+    elif(context.head.value == "<<"):
+        right = ComparisonNodeSmallerThan(None, right, None, context.head.lineNr)
+    elif(context.head.value == ">>"):
+        right = ComparisonNodeGreaterThan(None, right, None, context.head.lineNr)
+    elif(context.head.value == "><"):
+        right = ComparisonNode(None, right, None, context.head.lineNr)
+    elif(context.head.value == "<>"):
+        right = ComparisonNodeNotEuqal(None, right, None, context.head.lineNr)
+    elif(context.head.value == "*"):
+        right = MultiplicationNode(None, right, None, context.head.lineNr)
+    elif(context.head.value == "\\"):
+        right = DivisionNode(None, right, None, context.head.lineNr)
+    else:
+        return None
+    return right
+
+
 def ParseAssignment(context: ParserObject):
     declaration = False
     if(context.head.value == "#"):
@@ -183,23 +206,8 @@ def ParseAssignment(context: ParserObject):
             return context
     context = MoveForward(context)
     if(context.head.type == "Operator"):
-        if(context.head.value == "+"):
-            right = AdditionNode(None, right, None, context.head.lineNr)
-        elif(context.head.value == "-"):
-            right = SubtractionNode(None, right, None, context.head.lineNr)
-        elif(context.head.value == "<<"):
-            right = ComparisonNodeSmallerThan(None, right, None, context.head.lineNr)
-        elif(context.head.value == ">>"):
-            right = ComparisonNodeGreaterThan(None, right, None, context.head.lineNr)
-        elif(context.head.value == "><"):
-            right = ComparisonNode(None, right, None, context.head.lineNr)
-        elif(context.head.value == "<>"):
-            right = ComparisonNodeNotEuqal(None, right, None, context.head.lineNr)
-        elif(context.head.value == "*"):
-            right = MultiplicationNode(None, right, None, context.head.lineNr)
-        elif(context.head.value == "\\"):
-            right = DivisionNode(None, right, None, context.head.lineNr)
-        else:
+        right = ParseOperator(context, right)
+        if(right == None):
             context.error = ErrorClass("Unexpected operator, got %s" % context.head.value, context.head.lineNr)
             return context
         rightOperatorValue = None

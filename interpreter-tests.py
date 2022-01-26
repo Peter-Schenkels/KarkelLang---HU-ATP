@@ -74,7 +74,6 @@ def test_string_add_4():
 def test_string_reinit():
     eval(inspect.currentframe().f_code.co_name, "Hi", run("tests/test-string-reinit.arw"))
 
-
 if __name__ == "__main__":
     test_int()
     test_int_reinit();
