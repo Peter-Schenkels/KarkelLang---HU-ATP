@@ -1,0 +1,11 @@
+& Combine [@ left, @ right] X @
+<
+    @ input <- left + right!
+    input -> !
+>
+
+& Main [] X @
+<
+    @ var <- Combine["H", "i"]!
+    var -> !
+>

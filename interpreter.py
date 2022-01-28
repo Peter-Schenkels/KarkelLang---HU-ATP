@@ -51,14 +51,14 @@ def GetVariableFromContext(globalVariables: list, localVariables: list, paramete
         output.variable = globalVariables[getIndexFromList(globalVariables, name.identifier.value)]
     elif(getIndexFromList(parameters, name.identifier.value) >= 0):
         output.variable = parameters[getIndexFromList(parameters, name.identifier.value)]
-    if(output.variable != None):
+    if(output.variable != None and type(output.variable) != FunctionNode):
         if(output.variable.type == Types.INTEGER):
             output.variable.value = int(output.variable.value)
         elif(output.variable.type == Types.STRING):
             output.variable.value = str(output.variable.value)
     return output   
 
-def GetListOfVariablesFromContext(variables: list, globalVariables: list, localVariables: list, parameters: list) -> list:
+def GetListOfVariablesObjectFromContext(variables: list, globalVariables: list, localVariables: list, parameters: list) -> list:
     if(variables != []):
         if(len(variables) > 1):
             head, *tail = variables
@@ -73,6 +73,22 @@ def GetListOfVariablesFromContext(variables: list, globalVariables: list, localV
     else:
         return []
         
+def GetListOfVariablesFromContext(variables: list, globalVariables: list, localVariables: list, parameters: list) -> list:
+    if(variables != []):
+        if(len(variables) > 1):
+            head, *tail = variables
+        else:
+            head = variables[0]
+            tail = []
+        variable = GetVariableFromContext(globalVariables, localVariables, parameters, head)
+        if(variable.variable != None):
+            return [variable.variable] + GetListOfVariablesFromContext(tail, globalVariables, localVariables, parameters)
+        else:
+            return
+    else:
+        return []
+
+
 def PopVariableFromContext(globalVariables: list, localVariables: list, parameters: list, name: PrimitiveNode) -> VariableObject:
     output = VariableObject(None, None, None, None)
     if(name.identifier == None):
@@ -305,7 +321,7 @@ def CheckParameterTypes(parameters: list) -> int:
     return 0
 
 def AssignValue(x: tuple):
-    x[0].value = x[1].variable.value
+    x[0].value = x[1].value
     return x[0]
 
 def ExecuteFunctionCallNode(node: FunctionCallNode, context: FunctionNode, root: ASTRoot):
@@ -313,9 +329,9 @@ def ExecuteFunctionCallNode(node: FunctionCallNode, context: FunctionNode, root:
     function = output.variable
     if(function != None):
         if(type(function) == FunctionNode):
-            parameterCheck = list(zip(function.parameterTypes, node.parameters))
+            parameters = GetListOfVariablesFromContext(node.parameters, root.globalVariables, context.codeSequenceNode.LocalVariables, context.parameters)
+            parameterCheck = list(zip(function.parameterTypes, parameters))
             if(CheckParameterTypes(parameterCheck) == len(function.parameterTypes)):  
-                parameters = GetListOfVariablesFromContext(node.parameters, root.globalVariables, context.codeSequenceNode.LocalVariables, context.parameters)
                 if(len(parameters) == len(parameterCheck)):
                     parameters = list(zip(function.parameterTypes, parameters))             
                     function.parameters = list(map(AssignValue, parameters))

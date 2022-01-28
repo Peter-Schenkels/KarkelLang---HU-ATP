@@ -1,0 +1,11 @@
+& Func [] X @
+<
+    @ var <- "H" + "i"!
+    var -> !
+>
+
+& Main [] X @
+<
+    @ var <- Func[]!
+    var -> !
+>

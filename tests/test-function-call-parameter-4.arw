@@ -1,0 +1,13 @@
+& Sum [# left, # right] X #
+<
+    # input <- left + right!
+    input -> !
+>
+
+& Main [] X #
+<
+    # x <- 4!
+    # y <- 6!
+    # var <- Sum[x, y]!
+    var -> !
+>

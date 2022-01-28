@@ -5,7 +5,7 @@ from tokens import *
 
 def split(input : str) ->list:
     pattern = re.compile("(\s)")
-    return re.sub('', input)
+    return pattern.sub('', input)
 
 def countCharacterUntil(input : list, match: str, stop : str) -> int:
     if(input== []): 
@@ -28,7 +28,7 @@ def checkError(input : list, lineNr : int = 1):
         lineNr += 1
     return checkError(tail, lineNr)
     
-def AddLineNr(tokens, lineNr=0):
+def AddLineNr(tokens, lineNr=1):
     if(tokens != []):
         head, *tail = tokens
         if(head.type == "NewLine"):
@@ -44,7 +44,7 @@ def lexer(input : str) -> list:
     patternExlusions = re.compile("\s")
     mismatches = patternInclusions.sub('', (patternExlusions.sub('', input)))
     if(len(mismatches) > 0):
-        print("Uknown Token at line: " + str(countCharacterUntil(split(input), "\n", mismatches[0]) + 1))
+        print("Unknown Token [ " + mismatches[0] +  " ] at line: " + str(countCharacterUntil(split(input), "\n", mismatches[0]) + 1))
         return []
     tokens  = AddLineNr(list(map(matchToken, patternInclusions.findall(input))))
     lineNr = checkError(tokens)

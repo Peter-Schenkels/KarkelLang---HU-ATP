@@ -11,7 +11,6 @@ def run(file: str):
     root = parse(tokens)
     if(root):
         output = interpreterRun(root)
-       
         return output
     return False
 

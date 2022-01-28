@@ -1,0 +1,10 @@
+& Return [@ input] X @
+<
+    input -> !
+>
+
+& Main [] X @
+<
+    @ var <- Return["Hi"]!
+    var -> !
+>
