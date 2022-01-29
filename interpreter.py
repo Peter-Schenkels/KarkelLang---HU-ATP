@@ -1,6 +1,8 @@
+from calendar import c
 from astNodes import *
 from tokenParser import *
 from enum import Enum
+import copy
 
 
 #High order function to Get item from a list
@@ -240,11 +242,14 @@ def ExecuteAssignNode(node: AssignNode, context: FunctionNode, root: ASTRoot):
             if(left.local):
                 output = PopVariableFromContext(root.globalVariables, localVariables, parameters, node.left)
                 root.globalVariables = output.globalVariables
-                localVariables = output.localVariables
-                localVariables.append(left.variable)
-            elif(not local or context == None):
+                context.codeSequenceNode.LocalVariables = output.localVariables
+                context.codeSequenceNode.LocalVariables.append(left.variable)
+            elif(local == False or context == None):
                 root.globalVariables.append(left.variable)
-                
+            elif(not local ):
+                context.parameters = parameters
+                context.parameters.append(left.variable)
+
             return InterpreterObject(root, None, context)
     return InterpreterObject(root, ErrorClass("Types do not match: ", node.lineNr), context)
 
@@ -323,7 +328,7 @@ def AssignValue(x: tuple):
     return x[0]
 
 def ExecuteFunctionCallNode(node: FunctionCallNode, context: FunctionNode, root: ASTRoot):
-    output = GetVariableFromContext(root.globalVariables, context.codeSequenceNode.LocalVariables, context.parameters, node )
+    output = copy.deepcopy(GetVariableFromContext(root.globalVariables, context.codeSequenceNode.LocalVariables, context.parameters, node ))
     function = output.variable
     if(function != None):
         if(type(function) == FunctionNode):

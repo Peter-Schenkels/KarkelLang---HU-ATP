@@ -20,21 +20,8 @@
     n -> !
 >
 
-& CountTill[# input, # end] X #
-<
-    ? input <> end
-    <
-       # return <- input!
-       return -> !!
-    >
-    input <- input + 1!
-    # return <- CountTill[input, end]!
-    return -> !
->
-
-
 & Main [] X #
 <
-    # output <- CountTill[0, 10]!
+    # output <- Fibonacho[10]!
     output -> !
 >

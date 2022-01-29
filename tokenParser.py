@@ -390,7 +390,7 @@ def TokensToAST(input: ParserObject) -> ParserObject:
         else:
             input.error = ErrorClass("Unexpected Token", input.head.lineNr)
             return input
-    return input;
+    return input
 
 def parse(tokens : list)->ASTRoot:
     root = ASTRoot()

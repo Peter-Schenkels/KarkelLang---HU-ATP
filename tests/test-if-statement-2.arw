@@ -1,0 +1,18 @@
+& Recursive [@ string, # count] X @
+<
+    ? count << 10
+    <
+        string <- string + "a"!
+        count <- count + 1!   
+        @ varkel <- Recursive[string, count]!
+        varkel -> !
+    >
+    string -> !
+>
+
+& Main [] X @
+<
+    @ input <- "a"!
+    @ var <- Recursive[input, 1]!
+    var -> !
+>
