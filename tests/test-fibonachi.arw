@@ -1,0 +1,40 @@
+& Fibonacho[# n] X #
+<
+    ? n << 100
+    <
+        ? n << 1
+        <
+            n -> !
+        >
+        ? n <> 1
+        <
+            n -> !
+        >
+        # callone <- n - 1!
+        # calltwo <- n - 2!
+        # returnone <- Fibonacho[callone]!
+        # returntwo <- Fibonacho[calltwo]!
+        # return <- returnone + returntwo!
+        return -> !
+    >
+    n -> !
+>
+
+& CountTill[# input, # end] X #
+<
+    ? input <> end
+    <
+       # return <- input!
+       return -> !!
+    >
+    input <- input + 1!
+    # return <- CountTill[input, end]!
+    return -> !
+>
+
+
+& Main [] X #
+<
+    # output <- CountTill[0, 10]!
+    output -> !
+>

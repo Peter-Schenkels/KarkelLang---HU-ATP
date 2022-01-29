@@ -247,19 +247,49 @@ def ParseAssignment(context: ParserObject) -> ParserObject:
     return CheckEndlineAppendNode(assignNode, context)
 
 def ParseKeyword(context: ParserObject) -> ParserObject:
-    ExpectedTokens = ["Identifier", "PrimitiveType"]
+    ExpectedTokens = ["Identifier", "NumericValue", "StringIndicator"]
     context = MoveForward(context)
     if(context.head.type == "Identifier"):
-        left = IdentifierNode(None, context.head.value, context.head.lineNr)
-    elif(context.head.type == "PrimitiveType"):
-        if(context.head.value == "#"):
-            left = IntegerNode(None, context.head.value, None, context.head.lineNr)
-        if(context.head.value == "@"):
-            left = StringNode(None, context.head.value, None, context.head.lineNr)
+        left = PrimitiveNode(None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
+    elif(context.head.type == "NumericValue"):
+        left = IntegerNode(None, context.head.value, None, context.head.lineNr)
+    elif(context.head.type == "StringIndicator"):
+        left = StringNode(None, context.head.value, None, context.head.lineNr)
+    else:
+        context.error = ErrorClass("Unexpected token, got %s" %context.head.value, context.head.lineNr)
+        return context
+    context = MoveForward(context)
+    if(context.head.type == "Operator"):
+        if(context.head.value == "<<"):
+            comparison = ComparisonNodeSmallerThan(None, left, None, context.head.lineNr)          
+        elif(context.head.value == ">>"):
+            comparison = ComparisonNodeGreaterThan(None, left, None, context.head.lineNr)          
+        elif(context.head.value == "<>"):
+            comparison = ComparisonNode(None, left, None, context.head.lineNr) 
+        else:
+            context.error = ErrorClass("Unexpected operator", context.head.lineNr)
+            return context    
         context = MoveForward(context)
-        if(context.head.type == "Operator"):
-            if(context.head.value == "<<"):
-                comparison = ComparisonNodeSmallerThan(None, left, None, context.head.lineNr)          
+        if(context.head.type == "Identifier"):
+            right = PrimitiveNode(None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
+        elif(context.head.type == "NumericValue"):
+            right = IntegerNode(None, context.head.value, None, context.head.lineNr)
+        elif(context.head.type == "StringIndicator"):
+            right = StringNode(None, context.head.value, None, context.head.lineNr)
+            context = MoveForward(context)         
+        else:
+            context.error = ErrorClass("Unexpected right value", context.head.lineNr)
+            return context   
+        comparison.right = right
+        context = MoveForward(context)
+        ifCodeSegment = FunctionDeclareNode(None, CodeSequenceNode(None, [], [], 0), [], None, None, 0)
+        oldFunction = context.currentFunctionDeclarationNode
+        context.currentFunctionDeclarationNode = ifCodeSegment
+        context = TokensToAST(MoveForward(context))
+        ifNode = IfNode(None, comparison, context.currentFunctionDeclarationNode.code, context.head.lineNr)
+        context.currentFunctionDeclarationNode = oldFunction
+        context.currentFunctionDeclarationNode.code.Sequence.append(ifNode)
+        return context
     return
 
 def CheckEndlineAppendNode(node: ASTNode, context: ParserObject) -> ParserObject:

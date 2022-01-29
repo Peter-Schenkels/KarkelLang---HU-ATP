@@ -267,9 +267,9 @@ def ExecuteIfNode(node: IfNode, context: FunctionNode, root: ASTRoot):
     if(node != None):
         output = ExecuteOperator(node.comparison, context, root)
         if(output.output.value):
-            node.codeSequenceNode.LocalVariables = context.codeSequenceNode.LocalVariables
-            ifFunction = FunctionNode(None, context.returnType, context.parameters, node.codeSequenceNode, None, node.lineNr)
-            return interpreter(ifFunction, root, None)
+            node.codeSequenceNode.Sequence += context.codeSequenceNode.Sequence
+            context.codeSequenceNode.Sequence = node.codeSequenceNode.Sequence
+            return interpreter(context, root, None)
         else:
             return InterpreterObject(root, None, context)
     return InterpreterObject(None, ErrorClass("Function stopped unexpectedly"), context.lineNr)
@@ -309,8 +309,6 @@ def ExecuteFunctionDeclareNode(node: FunctionDeclareNode, context: FunctionNode,
         return InterpreterObject(root, None, None)
     else:
         return InterpreterObject(None, ErrorClass("Cannot declare a function inside a function"), node.lineNr)
-
-
 
 def CheckParameterTypes(parameters: list) -> int:
     if(parameters != []):
