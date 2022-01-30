@@ -1,6 +1,3 @@
-
-import functools
-
 from tokens import *
 
 def split(input : str) ->list:
@@ -41,20 +38,12 @@ def AddLineNr(tokens, lineNr=1):
     
 def lexer(input : str) -> list:
     patternInclusions = re.compile("(\d+|(?<={)(.*?)(?=})|\w+|@|->|<-|<<|>>|<>|<|>|\{|\}|!|\+|\-|&|\[|\]|\?:|\?|:|#|,|\n)")
-    patternExlusions = re.compile("\s")
-    mismatches = patternInclusions.sub('', (patternExlusions.sub('', input)))
-    test = patternInclusions.findall(input)
+    mismatches = patternInclusions.sub('', (re.compile("\s").sub('', input)))
     if(len(mismatches) > 0):
         print("Unknown Token [ " + mismatches[0] +  " ] at line: " + str(countCharacterUntil(split(input), "\n", mismatches[0]) + 1))
         return []
-    tokens  = AddLineNr(list(map(matchToken, patternInclusions.findall(input))))
-    lineNr = checkError(tokens)
-    if(lineNr != 0):
-        print("Invalid token at line: " + str(lineNr))
+    tokens = AddLineNr(list(map(matchToken, patternInclusions.findall(input))))
+    if(checkError(tokens) != 0):
+        print("Invalid token at line: " + str(checkError(tokens)))
         return[]
     return tokens
-
-if __name__ == '__main__':
-    input = open("voorbeeld1.arw", "r")
-    tokens = lexer(input.read())
-    functools.reduce(print, tokens)

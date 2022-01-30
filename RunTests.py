@@ -1,8 +1,6 @@
 from KarkelLang import *
 import inspect
 
-
-
 testNr = 0
 testSucceeded = 0
 

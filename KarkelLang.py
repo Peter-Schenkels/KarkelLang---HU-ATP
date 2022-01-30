@@ -4,14 +4,9 @@ from tokenParser import *
 from interpreter import interpreterRun
       
 def run(file: str):
-    input = open(file, "r")
-    tokens = lexer(input.read())
-    # functools.reduce(print, tokens)
-    root = ASTRoot()
-    root = parse(tokens)
+    root = parse(lexer(open(file, "r").read()))
     if(root):
-        output = interpreterRun(root)
-        return output
+        return interpreterRun(root)
     return False
 
 def runOutput(file: str):
@@ -23,5 +18,5 @@ def runOutput(file: str):
         
 if __name__ == '__main__':
     file = sys.argv[1]
-    output = runOutput(file)
+    runOutput(file)
   

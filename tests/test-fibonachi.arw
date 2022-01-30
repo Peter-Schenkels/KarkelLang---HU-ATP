@@ -25,7 +25,7 @@
     # return <- Fibonacho[index]!
     ? index << count
     <   
-        StringOut[{Fibon achi:}]!
+        StringOut[{Fibonachi:}]!
         IntOutLine[return]!
         index <- index + 1!
         return <- PrintFibonachi[count, index]!

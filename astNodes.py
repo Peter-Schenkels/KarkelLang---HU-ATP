@@ -1,8 +1,6 @@
 from tokens import *
 from abc import ABC
 import jsonpickle
-from enum import Enum
-
 
 
 class ASTNode(ABC):
