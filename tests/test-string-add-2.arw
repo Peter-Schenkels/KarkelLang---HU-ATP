@@ -1,6 +1,6 @@
 & Main [] X @
 <
-    @ variable <- "i"!
-    @ output <- "H" + variable!
+    @ variable <- {i}!
+    @ output <- {H} + variable!
     output -> !
 >

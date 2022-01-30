@@ -32,7 +32,8 @@ tokens = {
     "*" : "Operator",
     "<" : "ContextOpen",
     ">" : "ContextClose",
-    "\"" : "StringIndicator",
+    "{" : "StringIndicator",
+    "}" : "StringIndicator",
     "!" : "EndLine",
     "\\" : "Operator",
     "&" : "FunctionDeclaration",
@@ -47,13 +48,13 @@ tokens = {
 }
     
 def matchToken(input : str, tokens : dict = tokens):
-    tokenType = tokens.get(input)
+    tokenType = tokens.get(input[0])
     if(tokenType is None):
-        pattern = re.compile("^[A-Za-z]+$")
-        if(pattern.match(input) != None):
-            return Token("Identifier", input)
+        pattern = re.compile("^[@-~!-/:-?_ ]*$")
+        if(pattern.match(input[0]) != None):
+            return Token("Identifier", input[0])
         pattern = re.compile("\d+")
-        if(pattern.match(input) != None):
-            return Token("NumericValue", input)
-        return Token("Error", input)
-    return Token(tokenType, input)
+        if(pattern.match(input[0]) != None):
+            return Token("NumericValue", input[0])
+        return Token("Error", input[0])
+    return Token(tokenType, input[0])

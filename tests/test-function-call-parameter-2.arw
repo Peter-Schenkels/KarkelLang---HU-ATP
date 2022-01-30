@@ -6,6 +6,6 @@
 
 & Main [] X @
 <
-    @ var <- Combine["H", "i"]!
+    @ var <- Combine[{H}, {i}]!
     var -> !
 >

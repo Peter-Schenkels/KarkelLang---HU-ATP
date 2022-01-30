@@ -2,7 +2,7 @@
 <
     ? count << 10
     <
-        string <- string + "a"!
+        string <- string + {a}!
         count <- count + 1!   
         @ varkel <- Recursive[string, count]!
         varkel -> !
@@ -12,7 +12,7 @@
 
 & Main [] X @
 <
-    @ input <- "a"!
+    @ input <- {a}!
     @ var <- Recursive[input, 1]!
     var -> !
 >

@@ -1,5 +1,5 @@
 & Main [] X @
 <
-    @ output <- "H" + "i"!
+    @ output <- {H} + {i}!
     output -> !
 >

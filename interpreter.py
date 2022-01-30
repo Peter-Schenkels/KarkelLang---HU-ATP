@@ -338,7 +338,14 @@ def ExecuteFunctionCallNode(node: FunctionCallNode, context: FunctionNode, root:
                 if(len(parameters) == len(parameterCheck)):
                     parameters = list(zip(function.parameterTypes, parameters))             
                     function.parameters = list(map(AssignValue, parameters))
-                    return interpreter(function, root, None)
+                    if((function.identifier.value == "IntOut" or function.identifier.value =="StringOut") and len(parameters) == 1):
+                        print(parameters[0][0].value, end = '')
+                        return InterpreterObject(root, None, context)
+                    elif((function.identifier.value == "IntOutLine" or function.identifier.value == "StringOutLine") and len(parameters) == 1):
+                        print(parameters[0][0].value)
+                        return InterpreterObject(root, None, context)
+                    else:    
+                        return interpreter(function, root, None)
                 else:
                     return InterpreterObject(None, ErrorClass("Missing Parameters", node.lineNr), None)
                 

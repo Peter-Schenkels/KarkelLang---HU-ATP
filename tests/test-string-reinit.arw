@@ -1,6 +1,6 @@
 & Main [] X @
 <
-    @ output <- "Test"!
-    output <- "Hi"!
+    @ output <- {Test}!
+    output <- {Hi}!
     output -> !
 >

@@ -20,8 +20,23 @@
     n -> !
 >
 
+& PrintFibonachi[# count, # index] X #
+<
+    # return <- Fibonacho[index]!
+    ? index << count
+    <   
+        StringOut[{Fibon achi:}]!
+        IntOutLine[return]!
+        index <- index + 1!
+        return <- PrintFibonachi[count, index]!
+        return -> !
+    >
+    return -> !
+>
+
+
 & Main [] X #
 <
-    # output <- Fibonacho[10]!
+    # output <- PrintFibonachi[10, 0]!
     output -> !
 >

@@ -6,8 +6,8 @@
 
 & Main [] X @
 <
-    @ x <- "H"!
-    @ y <- "i"!
+    @ x <- {H}!
+    @ y <- {i}!
     @ var <- Combine[x, y]!
     var -> !
 >

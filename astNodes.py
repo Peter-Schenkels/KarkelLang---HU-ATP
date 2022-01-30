@@ -155,5 +155,9 @@ class IfNode(KeywordNode):
 class ASTRoot():
     def __init__(self):
         self.globalVariables = []
+        self.globalVariables.append(FunctionNode(None, None, [IntegerNode(None, None, None, None)], [], IdentifierNode(None, "IntOut", 0), 0))
+        self.globalVariables.append(FunctionNode(None, None, [StringNode(None, None, None, None)], [], IdentifierNode(None, "StringOut", 0), 0))
+        self.globalVariables.append(FunctionNode(None, None, [IntegerNode(None, None, None, None)], [], IdentifierNode(None, "IntOutLine", 0), 0))
+        self.globalVariables.append(FunctionNode(None, None, [StringNode(None, None, None, None)], [], IdentifierNode(None, "StringOutLine", 0), 0))
         self.codeSequenceNode = CodeSequenceNode(self, self.globalVariables, [], 0)
         self.tokens = tokens.copy()

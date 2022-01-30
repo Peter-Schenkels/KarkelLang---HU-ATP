@@ -1,7 +1,7 @@
 & Main [] X @
 <
-    @ variablex <- "H"!
-    @ variabley <- "i"!
+    @ variablex <- {H}!
+    @ variabley <- {i}!
     @ output <- variablex + variabley!
     output -> !
 >

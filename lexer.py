@@ -12,9 +12,9 @@ def countCharacterUntil(input : list, match: str, stop : str) -> int:
         print("Character not in the list")
         return int("-inf")
     head, *tail = input
-    if(head == match): 
+    if(head[0] == match): 
         return countCharacterUntil(tail, match, stop) + 1
-    if(head == stop): 
+    if(head[0] == stop): 
         return 0
     return countCharacterUntil(tail, match, stop);
     
@@ -40,9 +40,10 @@ def AddLineNr(tokens, lineNr=1):
     return []
     
 def lexer(input : str) -> list:
-    patternInclusions = re.compile("(\d+|\w+|@|->|<-|<<|>>|<>|<|>|\"|!|\+|\-|&|\[|\]|\?:|\?|:|#|,|\n)")
+    patternInclusions = re.compile("(\d+|(?<={)(.*?)(?=})|\w+|@|->|<-|<<|>>|<>|<|>|\{|\}|!|\+|\-|&|\[|\]|\?:|\?|:|#|,|\n)")
     patternExlusions = re.compile("\s")
     mismatches = patternInclusions.sub('', (patternExlusions.sub('', input)))
+    test = patternInclusions.findall(input)
     if(len(mismatches) > 0):
         print("Unknown Token [ " + mismatches[0] +  " ] at line: " + str(countCharacterUntil(split(input), "\n", mismatches[0]) + 1))
         return []
