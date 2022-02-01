@@ -1,0 +1,7 @@
+& Main[] X #
+<
+    # array(6)!
+    array(3) <- 10!
+    # number <- array(3)!
+    number -> !
+>

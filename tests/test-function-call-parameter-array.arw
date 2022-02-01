@@ -1,0 +1,13 @@
+& Return [# input[]] X #
+<
+    # output <- input(2)!
+    output -> !
+>
+
+& Main [] X @
+<
+    # var(5)!
+    var(2) <- 10!
+    # arkel <- Return[var]!
+    arkel -> !
+>

@@ -2,19 +2,13 @@
 <
     ? n << 100
     <
-        ? n << 1
-        <
-            n -> !
-        >
-        ? n <> 1
+        ? n <<> 1
         <
             n -> !
         >
         # callone <- n - 1!
         # calltwo <- n - 2!
-        # returnone <- Fibonacho[callone]!
-        # returntwo <- Fibonacho[calltwo]!
-        # return <- returnone + returntwo!
+        # return <- Fibonacho[callone] + Fibonacho[calltwo]!
         return -> !
     >
     n -> !

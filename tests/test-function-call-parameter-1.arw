@@ -5,6 +5,6 @@
 
 & Main [] X @
 <
-    @ var <- Return[{Hi}]!
+    @ var <- Return[{H}] + Return[{i}]!
     var -> !
 >

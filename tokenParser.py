@@ -1,7 +1,7 @@
 from astNodes import *
 from tokens import *
-from lexer import checkError
-
+from lexer import bcolors
+import copy
 
 #           tokens 
 #     "@" : "PrimitiveType",
@@ -26,16 +26,7 @@ from lexer import checkError
 #     "," : "Seperator",
 #     "\n" : "NewLine"   
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+
 
 class ErrorClass():
     def __init__(self, what: str, where: str):
@@ -159,8 +150,41 @@ def ParseOperator(context: ParserObject, right: PrimitiveNode) -> OperatorNode:
         return None
     return right
 
+class ParseAssignObject():
+    def __init__(self, context, node, error):
+        self.context = context
+        self.node = node
+        self.error = error
 
-def ParseAssignment(context: ParserObject) -> ParserObject:
+def ParseAssignArrayAcces(node: ASTNode, context: ParserObject, declaration: bool) -> ParseAssignObject:
+    context = MoveForward(context)
+    if(context.head.type == "NumericValue"):
+        arrayIndex = IntegerNode(None, context.head.value, None, context.head.lineNr)
+    elif(context.head.type == "Identifier"):
+        arrayIndex = PrimitiveNode(None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
+    else:
+        context.error = ErrorClass("Unexpected token expected an Array index, got %s" % context.head.value, context.head.lineNr)
+        return ParseAssignObject(context, None, context.error)
+    if(declaration):
+        if(type(node) == IntegerNode):
+            node.value = 0
+        elif(type(node) == StringNode):
+            node.value = ""
+        node = ArrayNode(node, arrayIndex, node.identifier, context.head.lineNr)
+        context = MoveForward(context)
+        if(context.head.type != "ArrayClose"):
+            context.error = ErrorClass("Unexpected token expected an array close token, got %s" % context.head.value, context.head.lineNr)
+            return ParseAssignObject(context, None, context.error)
+        return ParseAssignObject(CheckEndlineAppendNode(node, MoveForward(context)), None, None)
+    else:
+        node = ArrayAccesNode(arrayIndex, node.identifier, context.head.lineNr) 
+        context = MoveForward(context)
+        if(context.head.type != "ArrayClose"):
+            context.error = ErrorClass("Unexpected token expected an array close token, got %s" % context.head.value, context.head.lineNr)
+            return ParseAssignObject(context, None, context.error)
+        return ParseAssignObject(context, node, None)
+
+def ParseLeftRightTypes(context) -> ASTNode:
     declaration = False
     if(context.head.value == "#"):
         left = IntegerNode(None, None, None, context.head.lineNr)
@@ -176,88 +200,111 @@ def ParseAssignment(context: ParserObject) -> ParserObject:
         left = PrimitiveNode(None, None, context.head.lineNr)
         right = PrimitiveNode(None, IdentifierNode(None, None, context.head.lineNr), context.head.lineNr)
     else:
+        context.error = ErrorClass("Unexpected token during parsing, got %s" % context.head.value, context.head.lineNr)
+        return None, None, context, None
+    return left, right, context, declaration
+
+def ParseAssignValue(node: ASTNode, context: ParserObject) -> ASTNode:
+    context = MoveForward(context)
+    if(context.head.type == "StringIndicator"):
+        output = ParseAssignString(context)
+        if(output.error == None):
+            node, context = output.node, output.context
+        else:
+            return output
+    elif(context.head.type == "NumericValue"):
+        node = IntegerNode(None, int(context.head.value), None, context.head.lineNr)
+    elif(context.head.type == "Identifier"):
+        if(node != None):
+            node.identifier = IdentifierNode(None, context.head.value, context.head.lineNr)     
+        if(context.tail[0].type == "ParameterOpen"):
+            output = ParseFunctionCallAssignment(context)
+            context, node = output.context, output.functionCall
+        elif(context.tail[0].type == "ArrayOpen"):
+            output = ParseAssignArrayAcces(node, MoveForward(context), False)
+            if(output.error == None):
+                node, context = output.node,  output.context
+            else:
+                return output.context        
+        else:
+            node = PrimitiveNode(None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
+    else:
         context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
+        return ParseAssignObject(context, None, context.error)     
+    return ParseAssignObject(context, node, None)      
+
+
+def ParseAssignOperator(node: ASTNode, left: ASTNode, context: ParserObject, declaration: bool) ->ParseAssignObject:
+    node = ParseOperator(context, node)
+
+    output = ParseAssignValue(None, context)  
+    if(output.error == None):
+        node.right, context = output.node, output.context
+    else:
+        return output.context
+    context = MoveForward(context)
+    return ParseAssignObject(context, node, None)
+
+
+def ParseAssignString(context: ParserObject) -> ParseAssignObject:
+    context = MoveForward(context)
+    if(context.head.type == "Identifier"):
+        node = node = StringNode(None, context.head.value, None, context.head.lineNr)
+        context = MoveForward(context)
+        if(context.head.type != "StringIndicator"):
+            context.error = ErrorClass("Unexpected token 4, got %s" % context.head.value, context.head.lineNr)
+            return ParseAssignObject(context, None, context.error)
+    else:
+        context.error = ErrorClass("Unexpected token 5,  got %s" % context.head.value, context.head.lineNr)
+        return ParseAssignObject(context, None, context.error)
+    return ParseAssignObject(context, node, None)
+
+def ParseAssignment(context: ParserObject) -> ParserObject:
+    left, right, context, declaration = ParseLeftRightTypes(context)
+    if(left is None or right is None):
         return context
     if(context.head.type == "Identifier"):
         left.identifier = IdentifierNode(None, context.head.value, context.head.lineNr)
         context = MoveForward(context)
-        if(context.head.type =="Assignment"):
-            context = MoveForward(context)
-            if(context.head.type == "StringIndicator"):
-                right = StringNode(None, "", None, context.head.lineNr)
-                context = MoveForward(context)
-                if(context.head.type == "Identifier"):
-                    right.value = context.head.value
-                    context = MoveForward(context)
-                    if(context.head.type != "StringIndicator"):
-                        context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
-                        return context
-                else:
-                    context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
-                    return context
-            elif(context.head.type == "NumericValue"):
-                right = IntegerNode(None, int(context.head.value), None, context.head.lineNr)
-            elif(context.head.type == "Identifier"):
-                if(context.tail[0].type == "ParameterOpen"):
-                    output = ParseFunctionCallAssignment(context)
-                    context = output.context
-                    right = output.functionCall
-                    context.currentFunctionDeclarationNode.code.Sequence.append(AssignNode(None, left, right, context.head.lineNr, declaration))
-                    return context
-                else:
-                    right = PrimitiveNode(None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
+        if(context.head.type == "ArrayOpen"):
+            output = ParseAssignArrayAcces(left, context, declaration)
+            if(output.error == None):
+                if(output.node is None):
+                    return output.context
+                left = output.node
+                context = MoveForward(output.context)
+                
             else:
-                context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
-                return context
+                return output.context
+        if(context.head.type =="Assignment"):
+            output = ParseAssignValue(right, context)  
+            if(output.error == None):
+                right, context = output.node, output.context
+            else:
+                return output.context
         else:
-            context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
+            context.error = ErrorClass("Unexpected token expected a Assignment token, got %s" % context.head.value, context.head.lineNr)
             return context
+    else:
+        context.error = ErrorClass("Unexpected token during parsing expected a Identifier, got %s" % context.head.value, context.head.lineNr)
+        return context
     context = MoveForward(context)
     if(context.head.type == "Operator"):
-        right = ParseOperator(context, right)
-        if(right == None):
-            context.error = ErrorClass("Unexpected operator, got %s" % context.head.value, context.head.lineNr)
-            return context
-        rightOperatorValue = None
-        context = MoveForward(context)
-        if(context.head.type == "StringIndicator"):
-            context = MoveForward(context)
-            if(context.head.type == "Identifier"):
-                rightOperatorValue = StringNode(None, context.head.value, None, context.head.lineNr)
-                context = MoveForward(context)
-                if(context.head.type != "StringIndicator"):
-                    context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
-                    return context
-                else:
-                    context = MoveForward(context)
-            else:
-                context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
-                return context
-        elif(context.head.type == "NumericValue"):
-           rightOperatorValue = IntegerNode(None, context.head.value, None, context.head.lineNr)
-           context = MoveForward(context)
-        elif(context.head.type == "Identifier"):
-            rightOperatorValue = PrimitiveNode(None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
-            context = MoveForward(context)
+        output = ParseAssignOperator(right, left, context, declaration)
+        if(output.error == None):
+            right, context  = output.node, output.context
         else:
-            context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
-            return context
-        right.right = rightOperatorValue
+            return output.context
     assignNode = AssignNode(None, left, right, context.head.lineNr, declaration)   
     return CheckEndlineAppendNode(assignNode, context)
 
 def ParseKeyword(context: ParserObject) -> ParserObject:
-    ExpectedTokens = ["Identifier", "NumericValue", "StringIndicator"]
-    context = MoveForward(context)
-    if(context.head.type == "Identifier"):
-        left = PrimitiveNode(None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
-    elif(context.head.type == "NumericValue"):
-        left = IntegerNode(None, context.head.value, None, context.head.lineNr)
-    elif(context.head.type == "StringIndicator"):
-        left = StringNode(None, context.head.value, None, context.head.lineNr)
+    type = context.head.value
+    output = ParseAssignValue(None, context)  
+    if(output.error == None):
+        left, context = output.node, output.context
     else:
-        context.error = ErrorClass("Unexpected token, got %s" %context.head.value, context.head.lineNr)
-        return context
+        return output.context
     context = MoveForward(context)
     if(context.head.type == "Operator"):
         if(context.head.value == "<<"):
@@ -266,29 +313,34 @@ def ParseKeyword(context: ParserObject) -> ParserObject:
             comparison = ComparisonNodeGreaterThan(None, left, None, context.head.lineNr)          
         elif(context.head.value == "<>"):
             comparison = ComparisonNode(None, left, None, context.head.lineNr) 
+        elif(context.head.value == "<<>"):
+            comparison = ComparisonNodeSmallerThanEqual(None, left, None, context.head.lineNr) 
+        elif(context.head.value == "<>>"):
+            comparison = ComparisonNodeGreaterThanEqual((None, left, None, context.head.lineNr))
         else:
             context.error = ErrorClass("Unexpected operator", context.head.lineNr)
             return context    
-        context = MoveForward(context)
-        if(context.head.type == "Identifier"):
-            right = PrimitiveNode(None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
-        elif(context.head.type == "NumericValue"):
-            right = IntegerNode(None, context.head.value, None, context.head.lineNr)
-        elif(context.head.type == "StringIndicator"):
-            right = StringNode(None, context.head.value, None, context.head.lineNr)
-            context = MoveForward(context)         
+        output = ParseAssignValue(None, context)  
+        if(output.error == None):
+            comparison.right, context = output.node, output.context
         else:
-            context.error = ErrorClass("Unexpected right value", context.head.lineNr)
-            return context   
-        comparison.right = right
+            return output.context
         context = MoveForward(context)
-        ifCodeSegment = FunctionDeclareNode(None, CodeSequenceNode(None, [], [], 0), [], None, None, 0)
+        
+        codeSegment = FunctionDeclareNode(None, CodeSequenceNode(None, [], [], 0), [], None, None, 0)
         oldFunction = context.currentFunctionDeclarationNode
-        context.currentFunctionDeclarationNode = ifCodeSegment
+        context.currentFunctionDeclarationNode = codeSegment
         context = TokensToAST(MoveForward(context))
-        ifNode = IfNode(None, comparison, context.currentFunctionDeclarationNode.code, context.head.lineNr)
+            
+        if(type == "?"):
+            node = IfNode(None, comparison, context.currentFunctionDeclarationNode.code, context.head.lineNr)
+        elif(type == "O"):
+            node = WhileNode(None, comparison, context.currentFunctionDeclarationNode.code, context.head.lineNr)
+        else:
+            context.error = ErrorClass("Unexpected keyword", context.head.lineNr)
+            return context
         context.currentFunctionDeclarationNode = oldFunction
-        context.currentFunctionDeclarationNode.code.Sequence.append(ifNode)
+        context.currentFunctionDeclarationNode.code.Sequence.append(node)
         return context
     return
 
@@ -330,16 +382,16 @@ def ParseParameters(context: ParserObject, functionCall: FunctionCallNode, expec
                 parameter.value = context.head.value
                 context = MoveForward(context)
                 if(context.head.type != "StringIndicator"):
-                    context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
+                    context.error = ErrorClass("Unexpected token 8, got %s" % context.head.value, context.head.lineNr)
                     return context
             else:
-                context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
+                context.error = ErrorClass("Unexpected token 9, got %s" % context.head.value, context.head.lineNr)
                 return context
             functionCall.parameters.append(parameter)
             return ParseParameters(MoveForward(context), functionCall, ["ParameterClose", "Seperator", "Return"])
         elif(context.head.type == "ParameterClose"):
-            context = MoveForward(context)
-            return CheckEndlineAppendNode(functionCall, context)
+            context.currentFunctionDeclarationNode.code.Sequence.append(functionCall)
+            return context
     else:
         context.error = ErrorClass("Unexpected token while parsing parameters, got %s" % context.head.value, context.head.lineNr)
         return context
@@ -362,11 +414,18 @@ def ParseFunctionCallAssignment(context: ParserObject) ->FunctionCallObject:
     else:
         return FunctionCallObject(context, None)
 
+def CheckEndline(context: ParserObject) -> ParserObject:
+    if(context.head.type == "EndLine"):
+        context = MoveForward(context)
+    else:
+        context.error = ErrorClass("Expected endline, got %s" % context.head.value, context.head.lineNr)
+    return context
+
 def ParseIdentifier(context: ParserObject):
     if(context.tail[0].type == "Return"):
         return ParseReturnIdentifier(context)
     elif(context.tail[0].type == "ParameterOpen"):
-        return ParseFunctionCall(context)
+        return CheckEndline(MoveForward(ParseFunctionCall(context)))
     else:
         return ParseAssignment(context)
     
@@ -377,7 +436,8 @@ def TokensToAST(input: ParserObject) -> ParserObject:
     "PrimitiveType" : ParseAssignment,
     "Identifier" : ParseIdentifier,
     "KeyWord"    : ParseKeyword,
-    "NumericValue" : ParseReturnNumericValue
+    "NumericValue" : ParseReturnNumericValue,
+    "Comment" :  ParseComment
     }
     
     if(input.error != None):
@@ -388,17 +448,29 @@ def TokensToAST(input: ParserObject) -> ParserObject:
         elif(input.head.type == "ContextClose"):
             return MoveForward(input)
         else:
-            input.error = ErrorClass("Unexpected Token", input.head.lineNr)
+            input.error = ErrorClass("Unexpected Token 10 got %s" % input.head.value, input.head.lineNr)
             return input
     return input
 
+def ParseComment(input: ParserObject):
+    input = MoveForward(input)
+    if(input.tail != []):
+        if(input.head.type == "Comment"):
+            return MoveForward(input)
+        else:
+            return ParseComment(input)
+    return input
+    
+        
 def parse(tokens : list)->ASTRoot:
-    root = ASTRoot()
-    head, *tail = tokens
-    context = ParserObject(head, tail, None, tokens, root, None)
-    context = TokensToAST(context)
-    root = context.rootAST
-    if(context.error != None):
-        print(bcolors.FAIL + context.error.what + ", On LineNr: " + str(context.error.where) + bcolors.RESET)
-        return False
-    return root
+    if(tokens  != []):
+        root = ASTRoot()
+        head, *tail = tokens
+        context = ParserObject(head, tail, None, tokens, root, None)
+        context = TokensToAST(context)
+        root = context.rootAST
+        if(context.error != None):
+            print(bcolors.FAIL + context.error.what + ", On LineNr: " + str(context.error.where) + bcolors.RESET)
+            return False
+        return root
+    return None

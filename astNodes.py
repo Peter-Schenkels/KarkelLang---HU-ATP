@@ -82,11 +82,15 @@ class IntegerNode(PrimitiveNode):
     def __init__(self, parentNode: ASTNode, value: int, identifier: IdentifierNode, lineNr: int):
         super().__init__( parentNode, identifier, lineNr)
         self.value = value
+        if(value == None):
+            self.value = 1
         self.type = Types.INTEGER
 class StringNode(PrimitiveNode):   
     def __init__(self, parentNode : ASTNode, value: str, identifier: IdentifierNode, lineNr: int):
         super().__init__( parentNode, identifier, lineNr)
         self.value = value
+        if(value == None):
+            self.value = ""
         self.type = Types.STRING
 class FunctionCallNode(PrimitiveNode):
     def __init__(self, parentNode :ASTNode, value: FunctionNode, parameters: list, identifier: IdentifierNode, lineNr: int):
@@ -106,7 +110,23 @@ class KeywordNode(ASTNode):
         super().__init__(parentNode, lineNr)
         self.parentNode = parentNode
         self.codeSequenceNode = codeSequenceNode
-       
+
+class ArrayNode(ASTNode):
+    def __init__(self, type: PrimitiveNode, size: PrimitiveNode, identifier: IdentifierNode, lineNr: int):
+        self.type = type
+        self.size = size
+        self.identifier = identifier
+        self.memory = []
+        self.lineNr = lineNr
+        self.index = None
+        self.value = None
+
+class ArrayAccesNode(ASTNode):
+    def __init__(self, index: PrimitiveNode, identifier: IdentifierNode, lineNr: int):
+        self.index = index
+        self.identifier = identifier
+        self.lineNr = lineNr
+  
 class ReturnNode(KeywordNode):
     def __init__(self, parentNode: ASTNode, value: PrimitiveNode, lineNr: int):
         super().__init__( parentNode, None, lineNr)
@@ -141,11 +161,23 @@ class ComparisonNodeSmallerThan(ComparisonNode):
     def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
         super().__init__( parentNode, left, right, lineNr)
         
+class ComparisonNodeGreaterThanEqual(ComparisonNode):
+    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
+        super().__init__( parentNode, left, right, lineNr)
+        
+class ComparisonNodeSmallerThanEqual(ComparisonNode):
+    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
+        super().__init__( parentNode, left, right, lineNr)
+        
 class ComparisonNodeNotEuqal(ComparisonNode):
     def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
         super().__init__( parentNode, left, right, lineNr)
         
 class IfNode(KeywordNode):
+    def __init__(self, parentNode: ASTNode, comparison: ComparisonNode, codeSequenceNode: CodeSequenceNode, lineNr: int):
+        super().__init__( parentNode, codeSequenceNode, lineNr)
+        self.comparison = comparison
+class WhileNode(KeywordNode):
     def __init__(self, parentNode: ASTNode, comparison: ComparisonNode, codeSequenceNode: CodeSequenceNode, lineNr: int):
         super().__init__( parentNode, codeSequenceNode, lineNr)
         self.comparison = comparison

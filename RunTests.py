@@ -1,6 +1,8 @@
 from KarkelLang import *
 import inspect
 
+sys.setrecursionlimit(3000)
+
 testNr = 0
 testSucceeded = 0
 
@@ -13,16 +15,17 @@ def eval(functionName: str, expectedResult, output):
     global testSucceeded
     
     testNr = testNr + 1
-
-    if(output.error == None):
-        if(output.currentFunction.returnValue.value == expectedResult):
-            testSucceeded = testSucceeded + 1
-            print(bcolors.OKGREEN + functionName  + " Succeeded" + bcolors.RESET) 
+    if(output):
+        if(output.error == None):
+            if(output.currentFunction.returnValue.value == expectedResult):
+                testSucceeded = testSucceeded + 1
+                print(bcolors.OKGREEN + functionName  + " Succeeded" + bcolors.RESET) 
+            else:
+                print(bcolors.FAIL + functionName  + " Failed, got: " + str(output.currentFunction.returnValue.value) + bcolors.RESET)
         else:
-            print(bcolors.FAIL + functionName  + " Failed, got: " + str(output.currentFunction.returnValue.value) + bcolors.RESET)
+            print(bcolors.FAIL + functionName  + " Failed, " + output.error.what + bcolors.RESET)
     else:
-        print(bcolors.FAIL + functionName  + " Failed, " + output.error.what + bcolors.RESET)
-
+        print(bcolors.FAIL + functionName  + " Failed")
 def test_int():
     eval(inspect.currentframe().f_code.co_name, 10, run("tests/test-int.arw"))
 
@@ -110,6 +113,17 @@ def test_if_statement_2():
 def test_fibonachi():
     eval(inspect.currentframe().f_code.co_name, 55 , run("tests/test-fibonachi.arw"))
 
+def test_array_1():
+    eval(inspect.currentframe().f_code.co_name, 10 , run("tests/test-array-1.arw"))
+    
+def test_while_loop_1():
+    eval(inspect.currentframe().f_code.co_name, 10 , run("tests/test-while-loop-1.arw"))
+    
+def test_function_call_parameter_array():
+    eval(inspect.currentframe().f_code.co_name, 10 , run("tests/test-function-call-parameter-array.arw"))
+    
+    
+    
 if __name__ == "__main__":
     test_int()
     test_int_reinit()
@@ -137,4 +151,7 @@ if __name__ == "__main__":
     test_if_statement_1()
     test_if_statement_2()
     test_fibonachi()
+    test_array_1()
+    test_function_call_parameter_array()
+    test_while_loop_1()
     eval_result()
