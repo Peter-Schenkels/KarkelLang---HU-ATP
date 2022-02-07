@@ -316,7 +316,7 @@ def ParseKeyword(context: ParserObject) -> ParserObject:
         elif(context.head.value == "<<>"):
             comparison = ComparisonNodeSmallerThanEqual(None, left, None, context.head.lineNr) 
         elif(context.head.value == "<>>"):
-            comparison = ComparisonNodeGreaterThanEqual((None, left, None, context.head.lineNr))
+            comparison = ComparisonNodeGreaterThanEqual(None, left, None, context.head.lineNr)
         else:
             context.error = ErrorClass("Unexpected operator", context.head.lineNr)
             return context    

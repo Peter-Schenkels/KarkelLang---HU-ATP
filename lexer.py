@@ -47,7 +47,7 @@ def AddLineNr(tokens, lineNr=1):
     return []
     
 def lexer(input : str) -> list:
-    patternInclusions = re.compile("(~|\d+|(?<={)(.*?)(?=})|\w+|O|@|->|<-|<>>|<<>|<<|>>|<>|<|>|\{|\}|!|\+|\-|&|\[|\]|\?:|\?|:|#|,|\(|\)|\n)")
+    patternInclusions = re.compile("(~|\d+|(?<={)(.*?)(?=})|\w+|O|@|->|<-|<>>|<<>|<<|>>|<>|<|>|\{|\}|!|\+|\-|\*|&|\[|\]|\?:|\?|:|#|,|\(|\)|\n)")
     mismatches = patternInclusions.sub('', (re.compile("\s").sub('', input)))
     if(len(mismatches) > 0):
         print(bcolors.FAIL + "Unknown Token [ " + mismatches[0] +  " ] at line: " + str(countCharacterUntil(split(input), "\n", mismatches[0]) + 1) + bcolors.RESET)

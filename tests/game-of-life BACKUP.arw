@@ -9,32 +9,35 @@
 & Main[] X #
 <
     # size <- 7 * 7!
-    # grid(size)!
+    # grid[size]!
 
+    ~Init grid~
     # count <- 0!
     O count << size
     <
-        grid(count) <- 0!
+        grid[count] <- 0!
     >
 
+    ~Update Loop~
     O 1 >> 0
     <
+        ~Check Neighbours~
         # x <- 0!
         # y <- 0!
         O x << 7
         <
             O y << 7
             <
+                ~Check nr of neighbours~
                 # neighbours <- 0!
                 # left <- x - 1!
                 # right <- x + 1!
                 # up <- y + 1!
                 # down <- y - 1!
-                # negative <- 0 - 1!
-                ? left >> negative
+                ? left >> -1
                 <
                     # LeftIndex <- OneDtoTwoD[left, y]!
-                    # LeftNeighbour <- grid(LeftIndex)!
+                    # LeftNeighbour <- grid[LeftIndex]!
                     ? LeftNeighbour <> 1
                     <
                         neighbours <- neighbours + 1!
@@ -43,16 +46,16 @@
                 ? right << 7
                 <
                     # RightIndex <- OneDtoTwoD[right, y]!
-                    # RightNeighbour <- grid(RightIndex)!
+                    # RightNeighbour <- grid[RightIndex]!
                     ? RightNeighbour <> 1
                     <
                         neighbours <- neighbours + 1!
                     >
                 >
-                ? down >> negative
+                ? down >> -1
                 <
                     # DownIndex <- OneDtoTwoD[Down, y]!
-                    # DownNeighbour <- grid(DownIndex)!
+                    # DownNeighbour <- grid[DownIndex]!
                     ? DownNeighbour <> 1
                     <
                         neighbours <- neighbours + 1!
@@ -61,37 +64,37 @@
                 ? up << 7
                 <
                     # UpIndex <- OneDtoTwoD[Up, y]!
-                    # UpNeighbour <- grid(RightIndex)!
+                    # UpNeighbour <- grid[RightIndex]!
                     ? UpNeighbour <> 1
                     <
                         neighbours <- neighbours + 1!
                     >
                 >
                 # index <- OneDtoTwoD[x, y]!
-                # currentBranchOne  <- grid(index)!
-                # currentBranchTwo <- grid(index)!
+                # currentBranchOne  <- grid[index]!
+                # currentBranchTwo <- grid[index]!
                 ? currentBranchOne <> 1
                 <
                     ? neighbours <<> 2
                     <
-                        grid(index) <- 0!
+                        grid[index] <- 0!
                     >
                     ? neighbours <>> 3
                     <
-                        grid(index) <- 0!
+                        grid[index] <- 0!
                     >
                 >
                 ? currentBranchTwo <> 1
                 <
                     ? neighbours <> 3
                     <
-                        grid(index) <- 1!
+                        grid[index] <- 1!
                     >
                 >
-                # current <- grid(index)!
+                # current <- grid[index]!
                 IntOut[current]!
             >
-            StringOutLine[{ }]!
+            StringOutLine[" "]!
         >
     >
 >
