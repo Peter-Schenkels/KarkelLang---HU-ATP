@@ -98,13 +98,17 @@ class FunctionCallNode(PrimitiveNode):
         self.value = value
         self.parameters = parameters
 
+
+    
+
+
 class FunctionDeclareNode(PrimitiveNode):
     def __init__(self, parentNode :ASTNode, code: CodeSequenceNode, parameterTypes: ParameterDeclarationNode, identifier: IdentifierNode, returnType: type, lineNr: int):
         super().__init__( parentNode, identifier, lineNr)
         self.code = code
         self.parameterTypes = parameterTypes
         self.returnType = returnType
- 
+
 class KeywordNode(ASTNode):
     def __init__(self, parentNode: ASTNode, codeSequenceNode: CodeSequenceNode, lineNr: int):
         super().__init__(parentNode, lineNr)

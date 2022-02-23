@@ -4,7 +4,7 @@ from tokenParser import *
 from interpreter import interpreterRun
       
 def run(file: str):
-    root = parse(lexer(open(file, "r").read()))
+    root = Parse(lexer(open(file, "r").read()))
     if(root):
         return interpreterRun(root)
     return False
