@@ -1,5 +1,7 @@
-from ast import AST
+from ast import AST, Return
+import operator
 from pickle import TUPLE
+from platform import node
 from astNodes import *
 from tokens import *
 from lexer import bcolors
@@ -55,12 +57,34 @@ class ParserObject():
     def getCurrentTokenIndex(self) -> int:
         return len(self.tokens) - len(self.tail)
 
+    def SetHead(self, head):
+        return ParserObject(head, self.tail, self.error, self.tokens, self.rootAST, self.currentFunctionDeclarationNode)
+    
+    def SetTail(self, tail):
+        return ParserObject(self.head, tail, self.error, self.tokens, self.rootAST, self.currentFunctionDeclarationNode)
+    
+    def SetError(self, error):
+        return ParserObject(self.head, self.tail, error, self.tokens, self.rootAST, self.currentFunctionDeclarationNode)
+    
+    def SetTokens(self, tokens):
+        return ParserObject(self.head, self.tail, self.error, tokens, self.rootAST, self.currentFunctionDeclarationNode)
+    
+    def SetRootAST(self, rootAST):
+        return ParserObject(self.head, self.tail, self.error, self.tokens, rootAST, self.currentFunctionDeclarationNode)
+    
+    def SetCurrentFunctionDeclareNode(self, node):
+        return ParserObject(self.head, self.tail, self.error, self.tokens, self.rootAST, node)
+    
+    def PopToken(self):
+        token = self.tail.pop
+        return token, ParserObject(self.head, self.tail, self.error, self.tokens, self.rootAST, node)
 
 
 #TODO: make const
 def MoveForward(context: ParserObject) -> ParserObject:
     if(context.tail != []):
-        context.head, *context.tail = context.tail
+        head, *tail = context.tail
+        return context.SetHead(head).SetTail(tail)
     return context        
 
 #TODO: make const
@@ -258,32 +282,24 @@ def ParseAssignValue(node: ASTNode, context: ParserObject) -> Tuple[ASTNode, Par
     return ParseAssignObject(context, node, None), context       
 
 
-#TODO: make const
-def ParseAssignOperator(node: ASTNode, left: ASTNode, context: ParserObject, declaration: bool) ->ParseAssignObject:
-    node = ParseOperator(context, node)
 
-    output, context = ParseAssignValue(None, context)  
-    if(output.error == None):
-        node.right, context = output.node, output.context
+def ParseAssignOperator(NODE: OperatorNode, INPUT_CONTEXT: ParserObject) ->ParseAssignObject:
+    NODE = ParseOperator(INPUT_CONTEXT, NODE)
+    OUTPUT, _ = ParseAssignValue(None, INPUT_CONTEXT)  
+    if(OUTPUT.error != None):
+        return OUTPUT.context
+    return ParseAssignObject(MoveForward(OUTPUT.context), type(NODE)(None, NODE.left, OUTPUT.node, NODE.lineNr), None)
+
+def ParseAssignString(INPUT_CONTEXT: ParserObject) -> ParseAssignObject:
+    CONTEXT = MoveForward(INPUT_CONTEXT)
+    if(CONTEXT.head.type == "Identifier"):
+        NODE = StringNode(None, CONTEXT.head.value, None, CONTEXT.head.lineNr)
+        CONTEXT = MoveForward(CONTEXT)
+        if(CONTEXT.head.type != "StringIndicator"):
+            return AddErrorToContext(CONTEXT, ErrorClass("Unexpected token expected string indicator, got %s" % CONTEXT.head.value, CONTEXT.head.lineNr))
     else:
-        return output.context
-    context = MoveForward(context)
-    return ParseAssignObject(context, node, None)
-
-
-#TODO: make const
-def ParseAssignString(context: ParserObject) -> ParseAssignObject:
-    context = MoveForward(context)
-    if(context.head.type == "Identifier"):
-        node = node = StringNode(None, context.head.value, None, context.head.lineNr)
-        context = MoveForward(context)
-        if(context.head.type != "StringIndicator"):
-            context.error = ErrorClass("Unexpected token 4, got %s" % context.head.value, context.head.lineNr)
-            return ParseAssignObject(context, None, context.error)
-    else:
-        context.error = ErrorClass("Unexpected token 5,  got %s" % context.head.value, context.head.lineNr)
-        return ParseAssignObject(context, None, context.error)
-    return ParseAssignObject(context, node, None)
+        return AddErrorToContext(CONTEXT, ErrorClass("Unexpected token, expected Identifier,  got %s" % CONTEXT.head.value, CONTEXT.head.lineNr))
+    return ParseAssignObject(CONTEXT, NODE, None)
 
 #TODO: make const
 def ParseAssignment(context: ParserObject) -> ParserObject:
@@ -317,7 +333,7 @@ def ParseAssignment(context: ParserObject) -> ParserObject:
         return context
     context = MoveForward(context)
     if(context.head.type == "Operator"):
-        output = ParseAssignOperator(right, left, context, declaration)
+        output = ParseAssignOperator(right, context)
         if(output.error == None):
             right, context  = output.node, output.context
         else:
@@ -325,7 +341,10 @@ def ParseAssignment(context: ParserObject) -> ParserObject:
     assignNode = AssignNode(None, left, right, context.head.lineNr, declaration)   
     return CheckEndlineAppendNode(assignNode, context)
 
-#todo make fucntional
+def SwapFunctionDeclNodeFromContext(CONTEXT: ParserObject, NODE: FunctionDeclareNode) -> ParserObject:
+    return ParserObject(CONTEXT.head, CONTEXT.tail, CONTEXT.error, CONTEXT.tokens, CONTEXT.rootAST, NODE)
+    
+#todo SOMETHING WITH TYPE
 def ParseKeyword(INPUT_CONTEXT: ParserObject) -> ParserObject:
     type = INPUT_CONTEXT.head.value
     ASSING_VALUE_PARSE_OUTPUT, _ = ParseAssignValue(None, INPUT_CONTEXT)  
@@ -350,21 +369,16 @@ def ParseKeyword(INPUT_CONTEXT: ParserObject) -> ParserObject:
             case "<>>": comparison = ComparisonNodeGreaterThanEqual(None, LEFT, RIGHT, PARSED_CONTEXT.head.lineNr)
             case _ : return AddErrorToContext(PARSED_CONTEXT, ErrorClass("Unexpected operator", PARSED_CONTEXT.head.lineNr))
         
-        codeSegment = FunctionDeclareNode(None, CodeSequenceNode(None, [], [], 0), [], None, None, 0)
-        oldFunction = CONTEXT.currentFunctionDeclarationNode
-        CONTEXT.currentFunctionDeclarationNode = codeSegment
-        CONTEXT = TokensToAST(MoveForward(CONTEXT))
+        OLD_DECL = CONTEXT.currentFunctionDeclarationNode
+        CONTEXT = TokensToAST(MoveForward(SwapFunctionDeclNodeFromContext(CONTEXT, FunctionDeclareNode(None, CodeSequenceNode(None, [], [], 0), [], None, None, 0))))
             
         if(type == "?"):
             node = IfNode(None, comparison, CONTEXT.currentFunctionDeclarationNode.code, CONTEXT.head.lineNr)
         elif(type == "O"):
             node = WhileNode(None, comparison, CONTEXT.currentFunctionDeclarationNode.code, CONTEXT.head.lineNr)
         else:
-            CONTEXT.error = ErrorClass("Unexpected keyword", CONTEXT.head.lineNr)
-            return CONTEXT
-        CONTEXT.currentFunctionDeclarationNode = oldFunction
-        CONTEXT.currentFunctionDeclarationNode.code.Sequence.append(node)
-        return CONTEXT
+            return AddErrorToContext(CONTEXT, ErrorClass("Unexpected keyword", CONTEXT.head.lineNr))
+        return AppendSequenceFromContext(SwapFunctionDeclNodeFromContext(CONTEXT, OLD_DECL), node)
     return
 
 def CheckEndlineAppendNode(NODE: ASTNode, CONTEXT: ParserObject) -> ParserObject:
@@ -385,9 +399,7 @@ def appendToParameters(FUNCTION_CALL: FunctionCallNode, parameter: PrimitiveNode
     NEW_PARAMETERS = FUNCTION_CALL.parameters + [parameter]
     return FunctionCallNode(None, FUNCTION_CALL.value, NEW_PARAMETERS, FUNCTION_CALL.identifier, FUNCTION_CALL.lineNr)
 
-def AppendSequenceFromContext(CONTEXT: ParserObject, NODE: ASTNode) -> Tuple[ParserObject, ASTNode]:
-    # CONTEXT.currentFunctionDeclarationNode.code.Sequence.append(FUNCTION_CALL)
-        
+def AppendSequenceFromContext(CONTEXT: ParserObject, NODE: ASTNode) -> Tuple[ParserObject, ASTNode]:      
     FUNC_NODE = CONTEXT.currentFunctionDeclarationNode
     SEQUENCE = FUNC_NODE.code.Sequence + [NODE]
     CODE = CodeSequenceNode(None, FUNC_NODE.code.globalVariables, SEQUENCE, FUNC_NODE.lineNr)
@@ -412,7 +424,7 @@ def ParseParameters(CONTEXT: ParserObject, FUNCTION_CALL: FunctionCallNode, EXPE
                 NEW_CONTEXT = MoveForward(CONTEXT)
                 if(NEW_CONTEXT.head.type == "Identifier"):
                     PARAMETER = StringNode(None, NEW_CONTEXT.head.value, None, CONTEXT.head.lineNr)
-                    CONTEXT = MoveForward(CONTEXT)
+                    CONTEXT = MoveForward(NEW_CONTEXT)
                     if(CONTEXT.head.type != "StringIndicator"):
                         return AddErrorToContext(CONTEXT, ErrorClass("Unexpected token 8, got %s" % CONTEXT.head.value, CONTEXT.head.lineNr))
                 else:

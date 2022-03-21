@@ -1,41 +1,27 @@
-from tokenParser import *
+# from tokenParser import *
 
-def ParseKeyword(INPUT_CONTEXT: ParserObject) -> ParserObject:
-    type = INPUT_CONTEXT.head.value
-    ASSING_VALUE_PARSE_OUTPUT, _ = ParseAssignValue(None, INPUT_CONTEXT)  
-    if(ASSING_VALUE_PARSE_OUTPUT.error == None):
-        LEFT, CONTEXT = ASSING_VALUE_PARSE_OUTPUT.node, MoveForward(ASSING_VALUE_PARSE_OUTPUT.context)
+class ImmutableObject(object):
+    
+    def __init__(self, value: str|dict=None, sukkel: str=None, arjan: str=None) -> None:
+        if (type(value) == dict):
+            self.__dict__.update(value)
+        else:
+            self.value = value
+            self.sukkel = sukkel
+            self.arjan = arjan
+
+        
+def SetAttribute(input: object, attributeName: str, attributeValue: object) -> object:
+    attributes = input.__dict__
+    if (attributeName in attributes):
+        attributeIndex = list(attributes.keys()).index(attributeName)
+        first_part = dict(dict(list(attributes.items())[:attributeIndex]), **{attributeName : attributeValue})
+        new_attributes = dict(first_part, **dict(list(attributes.items())[attributeIndex+1:]))
+        return type(input)(new_attributes)
     else:
-        return ASSING_VALUE_PARSE_OUTPUT.context
-
-    if(CONTEXT.head.type == "Operator"):             
-        output, PARSED_CONTEXT = ParseAssignValue(None, CONTEXT)  
-        if(output.error == None):
-                RIGHT, CONTEXT = output.node, MoveForward(output.context)
-        else:
-            return output.CONTEXT
-        
-        match PARSED_CONTEXT.head.value:
-            case "<<": comparison = ComparisonNodeSmallerThan(None, LEFT, RIGHT, PARSED_CONTEXT.head.lineNr)          
-            case ">>": comparison = ComparisonNodeGreaterThan(None, LEFT, RIGHT, PARSED_CONTEXT.head.lineNr)          
-            case "<>": comparison = ComparisonNode(None, LEFT, RIGHT, PARSED_CONTEXT.head.lineNr) 
-            case "<<>": comparison = ComparisonNodeSmallerThanEqual(None, LEFT, RIGHT, PARSED_CONTEXT.head.lineNr) 
-            case "<>>": comparison = ComparisonNodeGreaterThanEqual(None, LEFT, RIGHT, PARSED_CONTEXT.head.lineNr)
-            case _: return AddErrorToContext(PARSED_CONTEXT, ErrorClass("Unexpected operator", PARSED_CONTEXT.head.lineNr))
-        
-        codeSegment = FunctionDeclareNode(None, CodeSequenceNode(None, [], [], 0), [], None, None, 0)
-        oldFunction = CONTEXT.currentFunctionDeclarationNode
-        CONTEXT.currentFunctionDeclarationNode = codeSegment
-        CONTEXT = TokensToAST(MoveForward(CONTEXT))
-            
-        if(type == "?"):
-            node = IfNode(None, comparison, CONTEXT.currentFunctionDeclarationNode.code, CONTEXT.head.lineNr)
-        elif(type == "O"):
-            node = WhileNode(None, comparison, CONTEXT.currentFunctionDeclarationNode.code, CONTEXT.head.lineNr)
-        else:
-            CONTEXT.error = ErrorClass("Unexpected keyword", CONTEXT.head.lineNr)
-            return CONTEXT
-        CONTEXT.currentFunctionDeclarationNode = oldFunction
-        CONTEXT.currentFunctionDeclarationNode.code.Sequence.append(node)
-        return CONTEXT
-    return
+        return None
+    
+    
+test = ImmutableObject("Hallo", "ik", "heet Arjan")
+new = SetAttribute(test, "arjan", 69)
+pass

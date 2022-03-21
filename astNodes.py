@@ -108,6 +108,21 @@ class FunctionDeclareNode(PrimitiveNode):
         self.code = code
         self.parameterTypes = parameterTypes
         self.returnType = returnType
+        
+    def SetCode(self, code):
+        return FunctionDeclareNode(self.parentNode, code, self.parameterTypes, self.identifier, self.returnType, self.lineNr)
+    
+    def SetParameterTypes(self, parameterTypes):
+        return FunctionDeclareNode(self.parentNode, self.code, parameterTypes, self.identifier, self.returnType, self.lineNr)
+    
+    def SetReturnType(self, returnType):
+        return FunctionDeclareNode(self.parentNode, self.code, self.parameterTypes, self.identifier, returnType, self.lineNr)
+    
+    def SetIdentifier(self, identifier):
+        return FunctionDeclareNode(self.parentNode, self.code, self.parameterTypes, identifier, self.returnType, self.lineNr)
+    
+    def SetLineNr(self, lineNr):
+        return FunctionDeclareNode(self.parentNode, self.code, self.parameterTypes, self.identifier, self.returnType, lineNr)
 
 class KeywordNode(ASTNode):
     def __init__(self, parentNode: ASTNode, codeSequenceNode: CodeSequenceNode, lineNr: int):
