@@ -6,6 +6,7 @@ import copy
 
 
 #High order function to Get item from a list
+#todo make functional
 def getItemFromList(items: list, target:str):
     if(items == []):
         return None
@@ -15,6 +16,7 @@ def getItemFromList(items: list, target:str):
     else:
         return getItemFromList(tail, target)
     
+#todo make functional
 def getIndexFromList(items: list, target:str):
     if(items == []):
         return -float("inf")
@@ -26,12 +28,14 @@ def getIndexFromList(items: list, target:str):
 
 
 class InterpreterObject(object):
+    #todo make functional
     def __init__(self, root: ASTRoot, error: ErrorClass, currentFunction: FunctionNode =None):
         self.root = root
         self.error = error
         self.currentFunction = currentFunction
 
 class VariableObject():
+    #todo make functional
     def __init__(self, variable: PrimitiveNode, local: bool, localVariables: list, globalVariables: list): 
         self.variable = variable
         self.local = local
@@ -39,10 +43,12 @@ class VariableObject():
         self.globalVariables = globalVariables
 
 class OperatorObject():
+    #todo make functional
     def __init__(self, output: PrimitiveNode, Error: ErrorClass):
         self.output = output
         self.Error = Error
  
+#todo make functional
 def GetVariableFromContext(globalVariables: list, localVariables: list, parameters: list, name: PrimitiveNode) -> VariableObject:
     output = VariableObject(None, None, None, None)
     if(name.identifier == None or name.identifier.value == None):
@@ -62,6 +68,7 @@ def GetVariableFromContext(globalVariables: list, localVariables: list, paramete
             output.variable.value = str(output.variable.value)
     return output   
 
+#todo make functional
 def GetListOfVariablesObjectFromContext(variables: list, globalVariables: list, localVariables: list, parameters: list) -> list:
     if(variables != []):
         if(len(variables) > 1):
@@ -77,6 +84,7 @@ def GetListOfVariablesObjectFromContext(variables: list, globalVariables: list, 
     else:
         return []
         
+#todo make functional
 def GetListOfVariablesFromContext(variables: list, globalVariables: list, localVariables: list, parameters: list) -> list:
     if(variables != []):
         if(len(variables) > 1):
@@ -93,6 +101,7 @@ def GetListOfVariablesFromContext(variables: list, globalVariables: list, localV
         return []
 
 
+#todo make functional
 def PopVariableFromContext(globalVariables: list, localVariables: list, parameters: list, name: PrimitiveNode) -> VariableObject:
     output = VariableObject(None, None, None, None)
     if(name.identifier == None):
@@ -115,6 +124,7 @@ def PopVariableFromContext(globalVariables: list, localVariables: list, paramete
     output.globalVariables = globalVariables
     return output
 
+#todo make functional
 def ExecuteOperator(inputNode: OperatorNode, context: FunctionNode, root: ASTRoot) -> OperatorObject:
     node = copy.deepcopy(inputNode)
     if(context != None):
@@ -214,10 +224,12 @@ def ExecuteOperator(inputNode: OperatorNode, context: FunctionNode, root: ASTRoo
         return output
 
 
+#todo make functional
 def ExecuteFunction(function: FunctionNode, root: ASTRoot):
         output = interpreter(copy.deepcopy(function), root, None)
         return output.currentFunction.returnValue  
 
+#todo make functional
 def ExecuteAssignNode(node: AssignNode, context: FunctionNode, root: ASTRoot):
     left = None
     local = None
@@ -313,6 +325,7 @@ def ExecuteAssignNode(node: AssignNode, context: FunctionNode, root: ASTRoot):
             return InterpreterObject(root, None, context)
     return InterpreterObject(root, ErrorClass("Types do not match: ", node.lineNr), context)
 
+#todo make functional
 def ExecuteReturnNode(node: ReturnNode, context: FunctionNode, root: ASTRoot):
     if(node.value != None):
         localVariables = context.codeSequenceNode.LocalVariables
@@ -328,6 +341,7 @@ def ExecuteReturnNode(node: ReturnNode, context: FunctionNode, root: ASTRoot):
         else:
             return InterpreterObject(root, ErrorClass("Incorrect return type: ", node.lineNr), context)     
 
+#todo make functional
 def ExecuteIfNode(node: IfNode, context: FunctionNode, root: ASTRoot):
     if(node != None):
         output = ExecuteOperator(node.comparison, context, root)
@@ -339,6 +353,7 @@ def ExecuteIfNode(node: IfNode, context: FunctionNode, root: ASTRoot):
             return InterpreterObject(root, None, context)
     return InterpreterObject(None, ErrorClass("Function stopped unexpectedly"), context.lineNr)
 
+#todo make functional
 def ExecuteWhileNode(node: WhileNode, context: FunctionNode, root: ASTRoot):
     if(node != None):
         output = ExecuteOperator(node.comparison, context, root)
@@ -352,6 +367,7 @@ def ExecuteWhileNode(node: WhileNode, context: FunctionNode, root: ASTRoot):
     return InterpreterObject(None, ErrorClass("Function stopped unexpectedly"), context.lineNr)
       
 
+#todo make functional
 def interpreterRun(root: ASTRoot, error: ErrorClass = None) -> InterpreterObject:
     if(error == None):
         if(root.codeSequenceNode.Sequence != []):
@@ -379,6 +395,7 @@ def interpreterRun(root: ASTRoot, error: ErrorClass = None) -> InterpreterObject
         print(error.what + error.where)
         return False
 
+#todo make functional
 def ExecuteFunctionDeclareNode(node: FunctionDeclareNode, context: FunctionNode, root: ASTRoot):
     if(context == None):
         function = FunctionNode(None, node.returnType, node.parameterTypes, CodeSequenceNode(None, None, node.code.Sequence, node.lineNr), node.identifier, node.lineNr)
@@ -387,6 +404,7 @@ def ExecuteFunctionDeclareNode(node: FunctionDeclareNode, context: FunctionNode,
     else:
         return InterpreterObject(None, ErrorClass("Cannot declare a function inside a function"), node.lineNr)
 
+#todo make functional
 def CheckParameterTypes(parameters: list) -> int:
     if(parameters != []):
         if(len(parameters) == 1):
@@ -396,10 +414,12 @@ def CheckParameterTypes(parameters: list) -> int:
         return (type(head[0]) == type(head[1])) + CheckParameterTypes(tail)
     return 0
 
+#todo make functional
 def AssignValue(x: tuple):
     x[0].value = x[1].value
     return x[0]
 
+#todo make functional
 def ExecuteFunctionCallNode(node: FunctionCallNode, context: FunctionNode, root: ASTRoot):
     output = copy.deepcopy(GetVariableFromContext(root.globalVariables, context.codeSequenceNode.LocalVariables, context.parameters, node ))
     function = output.variable
@@ -430,6 +450,7 @@ def ExecuteFunctionCallNode(node: FunctionCallNode, context: FunctionNode, root:
         return InterpreterObject(None, ErrorClass("Function doesnt exist", node.lineNr), context)
 
 
+#todo make functional
 def initArrayMemory(node: ArrayNode, count=0):
     if(count != node.size):
         node.memory.append(copy.deepcopy(node.type))
@@ -437,6 +458,7 @@ def initArrayMemory(node: ArrayNode, count=0):
     else:
         return node
 
+#todo make functional
 def ExecuteArrayNode(node: ArrayNode, context: FunctionNode, root: ASTRoot) -> InterpreterObject:
     if(context != None):
         localVariables = context.codeSequenceNode.LocalVariables
@@ -449,6 +471,7 @@ def ExecuteArrayNode(node: ArrayNode, context: FunctionNode, root: ASTRoot) -> I
     context.codeSequenceNode.LocalVariables.append((initArrayMemory(node)))
     return InterpreterObject(root, None, context)
 
+#todo make functional
 def interpreter(node: FunctionNode, root: ASTRoot, error: ErrorClass = None) -> InterpreterObject:
     if(error == None):
         if(node.codeSequenceNode.Sequence != []):

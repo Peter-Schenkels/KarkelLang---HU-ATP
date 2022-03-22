@@ -41,17 +41,17 @@ class ErrorClass():
         self.what = what
         self.where = where
 
-
- 
 class ParserObject():
-    #TODO: make const
-    def __init__(self, head: Token, tail: list, error: ErrorClass, tokens: list, rootAST: ASTRoot, currentFunctionDeclarationNode: FunctionDeclareNode):
-        self.head = head
-        self.tail = tail.copy()
-        self.error = error
-        self.tokens = tokens.copy()
-        self.rootAST = rootAST
-        self.currentFunctionDeclarationNode = currentFunctionDeclarationNode
+    def __init__(self, head: Token, tail: list=None, error: ErrorClass=None, tokens: list=None, rootAST: ASTRoot=None, currentFunctionDeclarationNode: FunctionDeclareNode=None):
+        if(type(head) == dict):
+            self.__dict__.update(head)
+        else:   
+            self.head = head
+            self.tail = tail.copy()
+            self.error = error
+            self.tokens = tokens.copy()
+            self.rootAST = rootAST
+            self.currentFunctionDeclarationNode = currentFunctionDeclarationNode
         
     #TODO: make const
     def getCurrentTokenIndex(self) -> int:
@@ -131,13 +131,12 @@ def ParseParameterTypes(context: ParserObject, expectedParameters: list=["Parame
         context.error = ErrorClass("Unexpected token in function parameter declaration", context.head.lineNr)
         return context
       
-#TODO: make const
 def ParseFunctionDeclaration(context: ParserObject) -> ParserObject:  
     if(context.currentFunctionDeclarationNode == None):
-        context.currentFunctionDeclarationNode = FunctionDeclareNode(context.rootAST, CodeSequenceNode(None, [], [], context.head.lineNr), [], None, None, context.head.lineNr)
+        context = SetAttribute(context, "currentFunctionDeclarationNode", FunctionDeclareNode(context.rootAST, CodeSequenceNode(None, [], [], context.head.lineNr), [], None, None, context.head.lineNr))
         context = MoveForward(context)
         if(context.head.type == "Identifier"):
-            context.currentFunctionDeclarationNode.identifier = IdentifierNode(context.rootAST, context.head.value, context.head.lineNr)
+            context = SetAttribute(context, "currentFunctionDeclarationNode", SetAttribute(context.currentFunctionDeclarationNode, "identifier", IdentifierNode(context.rootAST, context.head.value, context.head.lineNr)))
             context = MoveForward(context)
             if(context.head.type == "ParameterOpen"):
                 context = MoveForward(context)
@@ -145,34 +144,28 @@ def ParseFunctionDeclaration(context: ParserObject) -> ParserObject:
                 if(context.head.type == "ReturnTypeIndicator"):
                     context = MoveForward(context)
                     if(context.head.type == "PrimitiveType"):
-                        context.currentFunctionDeclarationNode.returnType = Types.INTEGER if context.head.value == "#" else Types.STRING
+                        context = SetAttribute(context, "currentFunctionDeclarationNode", SetAttribute(context.currentFunctionDeclarationNode, "returnType",  Types.INTEGER if context.head.value == "#" else Types.STRING))
                         context = MoveForward(context)
                         if(context.head.type == "ContextOpen"):
                             context = TokensToAST(MoveForward(context))
-                            context.rootAST.codeSequenceNode.Sequence.append(context.currentFunctionDeclarationNode)
+                            newSequence = context.rootAST.codeSequenceNode.Sequence + [context.currentFunctionDeclarationNode]
+                            context = SetAttribute(context, "rootAST", SetAttribute(context.rootAST, "codeSequenceNode", SetAttribute(context.rootAST.codeSequenceNode, "Sequence", newSequence)))                            
                             context.currentFunctionDeclarationNode = None
                             return TokensToAST(context)
                         else:
-                            context.error = ErrorClass("Function declaration error: Expected a context open token, got %s" % context.head.type, context.head.lineNr)
-                            return context
-                    else:
-                        context.error = ErrorClass("Function declaration error: Expected a return type, got %s" % context.head.type, context.head.lineNr)
-                        return context
+                            return AddErrorToContext(context, ErrorClass("Function declaration error: Expected a context open token, got %s" % context.head.type, context.head.lineNr))
+                    else:     
+                        return AddErrorToContext(context, ErrorClass("Function declaration error: Expected a return type, got %s" % context.head.type, context.head.lineNr))
                 else:
-                    context.error = ErrorClass("Function Declaration error: Expected Assignment token, got %s" % context.head.type, context.head.lineNr)
-                    return context
+                    return AddErrorToContext(context, ErrorClass("Function Declaration error: Expected Assignment token, got %s" % context.head.type, context.head.lineNr))
             else:
-                context.error = ErrorClass("Function Declaration error: Expected a Parameter Open token, got %s" % context.head.type, context.head.lineNr)
-                return context
+                return AddErrorToContext(context, ErrorClass("Function Declaration error: Expected a Parameter Open token, got %s" % context.head.type, context.head.lineNr))
         else:
-            context.error = ErrorClass("Function Declaration error: Expected a function identifier, got %s" % context.head.type, context.head.lineNr)
-            return context
+            return AddErrorToContext(context, ErrorClass("Function Declaration error: Expected a function identifier, got %s" % context.head.type, context.head.lineNr))
     else:
-        context.error = ErrorClass("Function Declaration error: Can't declare function inside a function", context.head.lineNr)
-        return context         
+        return AddErrorToContext(context, ErrorClass("Function Declaration error: Can't declare function inside a function", context.head.lineNr))  
 
 #Returns operator node based on token
-#TODO: make const
 def ParseOperator(context: ParserObject, right: PrimitiveNode) -> OperatorNode: 
     if(context.head.value == "+"):
         right = AdditionNode(None, right, None, context.head.lineNr)
@@ -195,13 +188,11 @@ def ParseOperator(context: ParserObject, right: PrimitiveNode) -> OperatorNode:
     return right
 
 class ParseAssignObject():
-    #TODO: make const
     def __init__(self, context, node, error):
         self.context = context
         self.node = node
         self.error = error
 
-#TODO: make const
 def ParseAssignArrayAcces(node: ASTNode, context: ParserObject, declaration: bool) -> ParseAssignObject:
     context = MoveForward(context)
     if(context.head.type == "NumericValue"):
@@ -209,28 +200,23 @@ def ParseAssignArrayAcces(node: ASTNode, context: ParserObject, declaration: boo
     elif(context.head.type == "Identifier"):
         arrayIndex = PrimitiveNode(None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
     else:
-        context.error = ErrorClass("Unexpected token expected an Array index, got %s" % context.head.value, context.head.lineNr)
+        context = AddErrorToContext(context, ErrorClass("Unexpected token expected an Array index, got %s" % context.head.value, context.head.lineNr))
         return ParseAssignObject(context, None, context.error)
     if(declaration):
-        if(type(node) == IntegerNode):
-            node.value = 0
-        elif(type(node) == StringNode):
-            node.value = ""
         node = ArrayNode(node, arrayIndex, node.identifier, context.head.lineNr)
         context = MoveForward(context)
         if(context.head.type != "ArrayClose"):
-            context.error = ErrorClass("Unexpected token expected an array close token, got %s" % context.head.value, context.head.lineNr)
+            context = AddErrorToContext(context, ErrorClass("Unexpected token expected an array close token, got %s" % context.head.value, context.head.lineNr))
             return ParseAssignObject(context, None, context.error)
         return ParseAssignObject(CheckEndlineAppendNode(node, MoveForward(context)), None, None)
     else:
         node = ArrayAccesNode(arrayIndex, node.identifier, context.head.lineNr) 
         context = MoveForward(context)
         if(context.head.type != "ArrayClose"):
-            context.error = ErrorClass("Unexpected token expected an array close token, got %s" % context.head.value, context.head.lineNr)
+            context = AddErrorToContext(context, ErrorClass("Unexpected token expected an array close token, got %s" % context.head.value, context.head.lineNr)) 
             return ParseAssignObject(context, None, context.error)
         return ParseAssignObject(context, node, None)
 
-#TODO: make const
 def ParseLeftRightTypes(context) -> ASTNode:
     declaration = False
     if(context.head.value == "#"):
@@ -247,11 +233,10 @@ def ParseLeftRightTypes(context) -> ASTNode:
         left = PrimitiveNode(None, None, context.head.lineNr)
         right = PrimitiveNode(None, IdentifierNode(None, None, context.head.lineNr), context.head.lineNr)
     else:
-        context.error = ErrorClass("Unexpected token during parsing, got %s" % context.head.value, context.head.lineNr)
-        return None, None, context, None
+        return None, None, AddErrorToContext(context, ErrorClass("Unexpected token during parsing, got %s" % context.head.value, context.head.lineNr)), None
     return left, right, context, declaration
 
-#TODO: make const
+
 def ParseAssignValue(node: ASTNode, context: ParserObject) -> Tuple[ASTNode, ParserObject]:
     context = MoveForward(context)
     if(context.head.type == "StringIndicator"):
@@ -264,7 +249,7 @@ def ParseAssignValue(node: ASTNode, context: ParserObject) -> Tuple[ASTNode, Par
         node = IntegerNode(None, int(context.head.value), None, context.head.lineNr)
     elif(context.head.type == "Identifier"):
         if(node != None):
-            node.identifier = IdentifierNode(None, context.head.value, context.head.lineNr)     
+            node = SetAttribute(node, "identifier", IdentifierNode(None, context.head.value, context.head.lineNr) )  
         if(context.tail[0].type == "ParameterOpen"):
             output = ParseFunctionCallAssignment(context)
             context, node = output.context, output.functionCall
@@ -277,7 +262,7 @@ def ParseAssignValue(node: ASTNode, context: ParserObject) -> Tuple[ASTNode, Par
         else:
             node = PrimitiveNode(None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
     else:
-        context.error = ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr)
+        context = AddErrorToContext(context, ErrorClass("Unexpected token, got %s" % context.head.value, context.head.lineNr))
         return ParseAssignObject(context, None, context.error), context     
     return ParseAssignObject(context, node, None), context       
 
@@ -301,13 +286,22 @@ def ParseAssignString(INPUT_CONTEXT: ParserObject) -> ParseAssignObject:
         return AddErrorToContext(CONTEXT, ErrorClass("Unexpected token, expected Identifier,  got %s" % CONTEXT.head.value, CONTEXT.head.lineNr))
     return ParseAssignObject(CONTEXT, NODE, None)
 
-#TODO: make const
+def SetAttribute(input: object, attributeName: str, attributeValue: object) -> object:
+    attributes = input.__dict__
+    if (attributeName in attributes):
+        attributeIndex = list(attributes.keys()).index(attributeName)
+        first_part = dict(dict(list(attributes.items())[:attributeIndex]), **{attributeName : attributeValue})
+        new_attributes = dict(first_part, **dict(list(attributes.items())[attributeIndex+1:]))
+        return type(input)(new_attributes)
+    else:
+        return None
+
 def ParseAssignment(context: ParserObject) -> ParserObject:
     left, right, context, declaration = ParseLeftRightTypes(context)
     if(left is None or right is None):
         return context
     if(context.head.type == "Identifier"):
-        left.identifier = IdentifierNode(None, context.head.value, context.head.lineNr)
+        left = SetAttribute(left, "identifier", IdentifierNode(None, context.head.value, context.head.lineNr))
         context = MoveForward(context)
         if(context.head.type == "ArrayOpen"):
             output = ParseAssignArrayAcces(left, context, declaration)

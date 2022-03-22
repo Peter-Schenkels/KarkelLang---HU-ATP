@@ -1,5 +1,7 @@
 # from tokenParser import *
 
+
+
 class ImmutableObject(object):
     
     def __init__(self, value: str|dict=None, sukkel: str=None, arjan: str=None) -> None:
@@ -20,7 +22,6 @@ def SetAttribute(input: object, attributeName: str, attributeValue: object) -> o
         return type(input)(new_attributes)
     else:
         return None
-    
     
 test = ImmutableObject("Hallo", "ik", "heet Arjan")
 new = SetAttribute(test, "arjan", 69)
