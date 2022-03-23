@@ -7,7 +7,7 @@ import jsonpickle
 class ASTNode(ABC):
     def __init__(self, parentNode=None, lineNr: int=None):
         if(type(parentNode) == dict):
-            self.__dict__.update(parentNode)
+            self.__dict__ = (parentNode)
         else:
             self.parentNode = parentNode
             self.lineNr = lineNr
@@ -26,7 +26,7 @@ class ParameterIdentifierNode(ASTNode):
 class IdentifierNode(ASTNode):
     def __init__(self, parentNode: ASTNode, value: str, lineNr: int):
         if(type(parentNode) == dict):
-            self.__dict__.update(parentNode)
+            self.__dict__ = (parentNode)
         else:
             super().__init__(parentNode, lineNr)
             self.value = value
@@ -47,7 +47,7 @@ class FunctionCallNode(IdentifierNode):
 class PrimitiveNode(ASTNode):
     def __init__(self, parentNode: ASTNode, identifier: IdentifierNode=None, lineNr: int=None):
         if(type(parentNode) == dict):
-            self.__dict__.update(parentNode)
+            self.__dict__ = (parentNode)
         else:
             super().__init__(parentNode, lineNr)
             self.identifier = identifier
@@ -74,7 +74,7 @@ class ParameterDeclarationNode(ASTNode):
 class CodeSequenceNode(ASTNode):
     def __init__(self, parentNode: ASTNode, globalVariables: list=None, codeSequence: list=None, lineNr: int=None):
         if(type(parentNode) == dict):
-            self.__dict__.update(parentNode)
+            self.__dict__ = (parentNode)
         else:
             super().__init__(parentNode, lineNr)
             self.parentNode = parentNode
@@ -83,19 +83,22 @@ class CodeSequenceNode(ASTNode):
 
 class FunctionNode(ASTNode):
     
-    def __init__(self, parentNode: ASTNode, returnType: Types, parameterTypes: ParameterDeclarationNode, codeSequence: CodeSequenceNode, identifier: IdentifierNode, lineNr: int):
-        super().__init__( parentNode, lineNr)
-        self.returnType = returnType
-        self.parameterTypes = parameterTypes
-        self.parameters = []
-        self.codeSequenceNode = codeSequence
-        self.identifier = identifier
-        self.returnValue = None
+    def __init__(self, parentNode: ASTNode|dict, returnType: Types=None, parameterTypes: ParameterDeclarationNode=None, codeSequence: CodeSequenceNode=None, identifier: IdentifierNode=None, lineNr: int=None):
+        if(type(parentNode) == dict):
+            self.__dict__ = (parentNode)
+            super().__init__( parentNode, lineNr)
+        else:
+            self.returnType = returnType
+            self.parameterTypes = parameterTypes
+            self.parameters = []
+            self.codeSequenceNode = codeSequence
+            self.identifier = identifier
+            self.returnValue = None
 
 class IntegerNode(PrimitiveNode):
     def __init__(self, parentNode: ASTNode|dict=None, value: int=None, identifier: IdentifierNode=None, lineNr: int=None):
         if(type(parentNode) == dict):
-            self.__dict__.update(parentNode)
+            self.__dict__ = (parentNode)
         else:
             super().__init__( parentNode, identifier, lineNr)
             self.value = value
@@ -105,7 +108,7 @@ class IntegerNode(PrimitiveNode):
 class StringNode(PrimitiveNode):   
     def __init__(self, parentNode : ASTNode|Dict, value: str=None, identifier: IdentifierNode=None, lineNr: int=None):
         if(type(parentNode) == dict):
-            self.__dict__.update(parentNode)
+            self.__dict__ = (parentNode)
         else:           
             super().__init__( parentNode, identifier, lineNr)
             self.value = value
@@ -115,7 +118,7 @@ class StringNode(PrimitiveNode):
 class FunctionCallNode(PrimitiveNode):
     def __init__(self, parentNode :ASTNode|dict, value: FunctionNode=None, parameters: list=None, identifier: IdentifierNode=None, lineNr: int=None):
         if(type(parentNode) == dict):
-            self.__dict__.update(parentNode)    
+            self.__dict__ = (parentNode)    
         else:
             super().__init__( parentNode, identifier, lineNr)
             self.value = value
@@ -126,7 +129,7 @@ class FunctionCallNode(PrimitiveNode):
 class FunctionDeclareNode(PrimitiveNode):
     def __init__(self, parentNode :ASTNode|dict, code: CodeSequenceNode=None, parameterTypes: ParameterDeclarationNode=None, identifier: IdentifierNode=None, returnType: type=None, lineNr: int=None):
         if(type(parentNode) == dict):
-            self.__dict__.update(parentNode)
+            self.__dict__ = (parentNode)
         else:
             super().__init__( parentNode, identifier, lineNr)
             self.code = code
@@ -155,20 +158,26 @@ class KeywordNode(ASTNode):
         self.codeSequenceNode = codeSequenceNode
 
 class ArrayNode(ASTNode):
-    def __init__(self, type: PrimitiveNode, size: PrimitiveNode, identifier: IdentifierNode, lineNr: int):
-        self.type = type
-        self.size = size
-        self.identifier = identifier
-        self.memory = []
-        self.lineNr = lineNr
-        self.index = None
-        self.value = None
+    def __init__(self, _type: PrimitiveNode|dict, size: PrimitiveNode=None, identifier: IdentifierNode=None, lineNr: int=None):
+        if(type(_type)==dict):
+            self.__dict__ = (_type)
+        else:
+            self.type = _type
+            self.size = size
+            self.identifier = identifier
+            self.memory = []
+            self.lineNr = lineNr
+            self.index = None
+            self.value = None
 
 class ArrayAccesNode(ASTNode):
-    def __init__(self, index: PrimitiveNode, identifier: IdentifierNode, lineNr: int):
-        self.index = index
-        self.identifier = identifier
-        self.lineNr = lineNr
+    def __init__(self, index: PrimitiveNode, identifier: IdentifierNode=None, lineNr: int=None):
+        if(type(index)==dict):
+            self.__dict__ = (index)
+        else:
+            self.index = index
+            self.identifier = identifier
+            self.lineNr = lineNr
   
 class ReturnNode(KeywordNode):
     def __init__(self, parentNode: ASTNode, value: PrimitiveNode, lineNr: int):
@@ -177,58 +186,90 @@ class ReturnNode(KeywordNode):
         self.value = value
 
 class AdditionNode(OperatorNode):
-    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
-        super().__init__( parentNode, left, right, lineNr)
+    def __init__(self, parentNode: ASTNode|dict, left: PrimitiveNode=None, right: PrimitiveNode=None, lineNr: int=None):
+        if(type(parentNode) == dict):
+            self.__dict__ = (parentNode)
+        else:
+            super().__init__( parentNode, left, right, lineNr)
        
 class SubtractionNode(OperatorNode):
-    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
-        super().__init__( parentNode, left, right, lineNr)
+    def __init__(self, parentNode: ASTNode|dict, left: PrimitiveNode=None, right: PrimitiveNode=None, lineNr: int=None):
+        if(type(parentNode) == dict):
+            self.__dict__ = (parentNode)
+        else:
+            super().__init__( parentNode, left, right, lineNr)
 
 class MultiplicationNode(OperatorNode):
-    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
-        super().__init__( parentNode, left, right, lineNr)
+    def __init__(self, parentNode: ASTNode|dict, left: PrimitiveNode=None, right: PrimitiveNode=None, lineNr: int=None):
+        if(type(parentNode) == dict):
+            self.__dict__ = (parentNode)
+        else:
+            super().__init__( parentNode, left, right, lineNr)
 
 class DivisionNode(OperatorNode):
-    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
-        super().__init__( parentNode, left, right, lineNr)
+    def __init__(self, parentNode: ASTNode|dict, left: PrimitiveNode=None, right: PrimitiveNode=None, lineNr: int=None):
+        if(type(parentNode) == dict):
+            self.__dict__ = (parentNode)
+        else:
+            super().__init__( parentNode, left, right, lineNr)
 
 class ComparisonNode(OperatorNode):
-    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
-        super().__init__( parentNode, left, right, lineNr)
-        
+    def __init__(self, parentNode: ASTNode|dict, left: PrimitiveNode=None, right: PrimitiveNode=None, lineNr: int=None):
+        if(type(parentNode) == dict):
+            self.__dict__ = (parentNode)
+        else:
+            super().__init__( parentNode, left, right, lineNr)
 class ComparisonNodeGreaterThan(ComparisonNode):
-    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
-        super().__init__( parentNode, left, right, lineNr)
+    def __init__(self, parentNode: ASTNode|dict, left: PrimitiveNode=None, right: PrimitiveNode=None, lineNr: int=None):
+        if(type(parentNode) == dict):
+            self.__dict__ = (parentNode)
+        else:
+            super().__init__( parentNode, left, right, lineNr)
         
 class ComparisonNodeSmallerThan(ComparisonNode):
-    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
-        super().__init__( parentNode, left, right, lineNr)
+    def __init__(self, parentNode: ASTNode|dict, left: PrimitiveNode=None, right: PrimitiveNode=None, lineNr: int=None):
+        if(type(parentNode) == dict):
+            self.__dict__ = (parentNode)
+        else:
+            super().__init__( parentNode, left, right, lineNr)
         
 class ComparisonNodeGreaterThanEqual(ComparisonNode):
-    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
-        super().__init__( parentNode, left, right, lineNr)
+    def __init__(self, parentNode: ASTNode|dict, left: PrimitiveNode=None, right: PrimitiveNode=None, lineNr: int=None):
+        if(type(parentNode) == dict):
+            self.__dict__ = (parentNode)
+        else:
+            super().__init__( parentNode, left, right, lineNr)
         
 class ComparisonNodeSmallerThanEqual(ComparisonNode):
-    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
-        super().__init__( parentNode, left, right, lineNr)
+    def __init__(self, parentNode: ASTNode|dict, left: PrimitiveNode=None, right: PrimitiveNode=None, lineNr: int=None):
+        if(type(parentNode) == dict):
+            self.__dict__ = (parentNode)
+        else:
+            super().__init__( parentNode, left, right, lineNr)
         
 class ComparisonNodeNotEuqal(ComparisonNode):
-    def __init__(self, parentNode: ASTNode, left: PrimitiveNode, right: PrimitiveNode, lineNr: int):
-        super().__init__( parentNode, left, right, lineNr)
+    def __init__(self, parentNode: ASTNode|dict, left: PrimitiveNode=None, right: PrimitiveNode=None, lineNr: int=None):
+        if(type(parentNode) == dict):
+            self.__dict__ = (parentNode)
+        else:
+            super().__init__( parentNode, left, right, lineNr)
         
 class IfNode(KeywordNode):
     def __init__(self, parentNode: ASTNode, comparison: ComparisonNode, codeSequenceNode: CodeSequenceNode, lineNr: int):
         super().__init__( parentNode, codeSequenceNode, lineNr)
         self.comparison = comparison
 class WhileNode(KeywordNode):
-    def __init__(self, parentNode: ASTNode, comparison: ComparisonNode, codeSequenceNode: CodeSequenceNode, lineNr: int):
-        super().__init__( parentNode, codeSequenceNode, lineNr)
-        self.comparison = comparison
+    def __init__(self, parentNode: ASTNode|dict, comparison: ComparisonNode=None, codeSequenceNode: CodeSequenceNode=None, lineNr: int=None):
+        if(type(parentNode) == dict):
+            self.__dict__ = parentNode
+        else:
+            super().__init__( parentNode, codeSequenceNode, lineNr)
+            self.comparison = comparison
 
 class ASTRoot():
     def __init__(self, args=None):
         if(type(args) == dict):
-            self.__dict__.update(args)
+            self.__dict__ = (args)
         else:
             self.globalVariables = []
             self.globalVariables.append(FunctionNode(None, None, [IntegerNode(None, None, None, None)], [], IdentifierNode(None, "IntOut", 0), 0))

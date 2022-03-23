@@ -233,6 +233,7 @@ def ParseAssignString(INPUT_CONTEXT: ParserObject) -> ParseAssignObject:
         return AddErrorToContext(CONTEXT, ErrorClass("Unexpected token, expected Identifier,  got %s" % CONTEXT.head.value, CONTEXT.head.lineNr))
     return ParseAssignObject(CONTEXT, NODE, None)
 
+#Instantiates a new object of the input object with the same fields but altered attribute value
 def SetAttribute(input: object, attributeName: str, attributeValue: object) -> object:
     attributes = input.__dict__
     if (attributeName in attributes):
