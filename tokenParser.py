@@ -9,32 +9,6 @@ import copy
 from collections.abc import *
 from typing import *
 
-
-#           tokens 
-#     "@" : "PrimitiveType",
-#     "->" : "Assignment",
-#     "<-" : "Return",
-#     "<<" : "Operator",
-#     ">>" : "Operator",
-#     "<>" : "Operator",
-#     "<" : "ContextOpen",
-#     ">" : "ContextClose",
-#     "\"" : "StringIndicator",
-#     "!" : "EndLine",
-#     "+" : "Operator",
-#     "-" : "Operator",
-#     "&" : "FunctionDeclaration",
-#     "[" : "ParameterOpen",
-#     "]" : "ParameterClose",
-#     "?:" : "KeyWord",
-#     "?" : "KeyWord",
-#     ":" : "KeyWord",
-#     "#" : "PrimitiveType",
-#     "," : "Seperator",
-#     "\n" : "NewLine"   
-
-
-
 class ErrorClass():
     #TODO: make const
     def __init__(self, what: str, where: str):
@@ -52,42 +26,14 @@ class ParserObject():
             self.tokens = tokens.copy()
             self.rootAST = rootAST
             self.currentFunctionDeclarationNode = currentFunctionDeclarationNode
-        
-    #TODO: make const
-    def getCurrentTokenIndex(self) -> int:
-        return len(self.tokens) - len(self.tail)
+    
 
-    def SetHead(self, head):
-        return ParserObject(head, self.tail, self.error, self.tokens, self.rootAST, self.currentFunctionDeclarationNode)
-    
-    def SetTail(self, tail):
-        return ParserObject(self.head, tail, self.error, self.tokens, self.rootAST, self.currentFunctionDeclarationNode)
-    
-    def SetError(self, error):
-        return ParserObject(self.head, self.tail, error, self.tokens, self.rootAST, self.currentFunctionDeclarationNode)
-    
-    def SetTokens(self, tokens):
-        return ParserObject(self.head, self.tail, self.error, tokens, self.rootAST, self.currentFunctionDeclarationNode)
-    
-    def SetRootAST(self, rootAST):
-        return ParserObject(self.head, self.tail, self.error, self.tokens, rootAST, self.currentFunctionDeclarationNode)
-    
-    def SetCurrentFunctionDeclareNode(self, node):
-        return ParserObject(self.head, self.tail, self.error, self.tokens, self.rootAST, node)
-    
-    def PopToken(self):
-        token = self.tail.pop
-        return token, ParserObject(self.head, self.tail, self.error, self.tokens, self.rootAST, node)
-
-
-#TODO: make const
 def MoveForward(context: ParserObject) -> ParserObject:
     if(context.tail != []):
         head, *tail = context.tail
-        return context.SetHead(head).SetTail(tail)
+        return SetAttribute(SetAttribute(context, "tail", tail), "head", head)
     return context        
 
-#TODO: make const
 def GetExpectedParameterTokens(token: Token) -> list:
     ParameterExpectedTokes = {
         "ParameterOpen" : ["ParameterClose", "PrimitiveType"],
@@ -101,22 +47,23 @@ def GetExpectedParameterTokens(token: Token) -> list:
 def AddErrorToContext(TARGET_CONTEXT: ParserObject, ERROR: ErrorClass):
     return ParserObject(TARGET_CONTEXT.head, TARGET_CONTEXT.tail, ERROR, TARGET_CONTEXT.tokens, TARGET_CONTEXT.rootAST, TARGET_CONTEXT.currentFunctionDeclarationNode)
 
-#TODO: make const
 def ParseParameterTypes(context: ParserObject, expectedParameters: list=["ParameterClose", "PrimitiveType"]) -> ParserObject:
     if(context.head.type in expectedParameters):
         expectedParameters = GetExpectedParameterTokens(context.head)
         if(context.head.type == "PrimitiveType"):
+
             if(context.head.value == "@"):
                 context = MoveForward(context)
                 if(context.head.type in expectedParameters):
-                    context.currentFunctionDeclarationNode.parameterTypes.append(StringNode(None, None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr))
+                    node = StringNode(None, None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)
             elif(context.head.value == "#"):
                 context = MoveForward(context)
                 if(context.head.type in expectedParameters):
-                    context.currentFunctionDeclarationNode.parameterTypes.append(IntegerNode(None, None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr))        
+                    node = IntegerNode(None, None, IdentifierNode(None, context.head.value, context.head.lineNr), context.head.lineNr)        
             else:
-                context.error = ErrorClass("Unexpected token in function parameter declaration", context.head.lineNr)
-                return context
+                return AddErrorToContext(context, ErrorClass("Unexpected token in function parameter declaration", context.head.lineNr))
+            parameterTypes = context.currentFunctionDeclarationNode.parameterTypes + [node]
+            context = SetAttribute(context, "currentFunctionDeclarationNode", SetAttribute(context.currentFunctionDeclarationNode, "parameterTypes", parameterTypes))
             expectedParameters = GetExpectedParameterTokens(context.head)
             context = MoveForward(context)
             return ParseParameterTypes(context, expectedParameters)
@@ -128,8 +75,8 @@ def ParseParameterTypes(context: ParserObject, expectedParameters: list=["Parame
             context = MoveForward(context)
             return context
     else:
-        context.error = ErrorClass("Unexpected token in function parameter declaration", context.head.lineNr)
-        return context
+        
+        return AddErrorToContext(context, ErrorClass("Unexpected token in function parameter declaration", context.head.lineNr))
       
 def ParseFunctionDeclaration(context: ParserObject) -> ParserObject:  
     if(context.currentFunctionDeclarationNode == None):

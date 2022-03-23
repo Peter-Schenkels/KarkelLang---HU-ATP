@@ -46,7 +46,7 @@ class OperatorObject():
     #todo make functional
     def __init__(self, output: PrimitiveNode, Error: ErrorClass):
         self.output = output
-        self.Error = Error
+        self.error = Error
  
 #todo make functional
 def GetVariableFromContext(globalVariables: list, localVariables: list, parameters: list, name: PrimitiveNode) -> VariableObject:
@@ -259,10 +259,10 @@ def ExecuteAssignNode(node: AssignNode, context: FunctionNode, root: ASTRoot):
         
         if(type(node.right) in [AdditionNode, SubtractionNode, MultiplicationNode, DivisionNode, ComparisonNode]):
             output = ExecuteOperator(node.right, context, root)
-            if(output.Error == None):
+            if(output.error == None):
                 right.variable = output.output
             else:
-                return InterpreterObject(root, output.Error, context)
+                return InterpreterObject(root, output.error, context)
         else:
             if(type(node.right) == FunctionCallNode):
                 output = ExecuteFunctionCallNode(node.right, context, root)
