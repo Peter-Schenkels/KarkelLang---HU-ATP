@@ -1,0 +1,10 @@
+& Return [# input] X #
+<
+    input -> !
+>
+
+& Main [] X #
+<
+    # var <- Return[1] + Return[2]!
+    var -> !
+>

@@ -10,22 +10,24 @@ def eval_result():
     print(bcolors.OKBLUE + "Tests: " + str(testSucceeded) + "/" + str(testNr) + " Succeeded" + bcolors.RESET) 
 
 def eval(functionName: str, expectedResult, output):
-    
-    global testNr
-    global testSucceeded
-    
-    testNr = testNr + 1
-    if(output):
-        if(output.error == None):
-            if(output.currentFunction.returnValue.value == expectedResult):
-                testSucceeded = testSucceeded + 1
-                print(bcolors.OKGREEN + functionName  + " Succeeded" + bcolors.RESET) 
+    if(compiling == None):
+        global testNr
+        global testSucceeded
+
+        testNr = testNr + 1
+        if(output):
+            if(output.error == None):
+                if(output.currentFunction.returnValue.value == expectedResult):
+                    testSucceeded = testSucceeded + 1
+                    print(bcolors.OKGREEN + functionName  + " Succeeded" + bcolors.RESET) 
+                else:
+                    print(bcolors.FAIL + functionName  + " Failed, got: " + str(output.currentFunction.returnValue.value) + bcolors.RESET)
             else:
-                print(bcolors.FAIL + functionName  + " Failed, got: " + str(output.currentFunction.returnValue.value) + bcolors.RESET)
+                print(bcolors.FAIL + functionName  + " Failed, " + output.error.what + bcolors.RESET)
         else:
-            print(bcolors.FAIL + functionName  + " Failed, " + output.error.what + bcolors.RESET)
+            print(bcolors.FAIL + functionName  + " Failed")
     else:
-        print(bcolors.FAIL + functionName  + " Failed")
+       print(bcolors.OKGREEN + functionName  + " Compiled" + bcolors.RESET) 
 def test_int():
     eval(inspect.currentframe().f_code.co_name, 10, run("tests/test-int.arw"))
 
@@ -43,6 +45,9 @@ def test_int_operator_add_3():
 
 def test_int_operator_add_4():
     eval(inspect.currentframe().f_code.co_name, 10, run("tests/test-int-operator-add-4.arw"))
+    
+def test_int_operator_add_5():
+    eval(inspect.currentframe().f_code.co_name, 10, run("tests/test-int-operator-add-5.arw"))
 
 def test_int_reinit_operator_add_1():
     eval(inspect.currentframe().f_code.co_name, 10, run("tests/test-init-reinit-operator-add-1.arw"))
@@ -95,6 +100,9 @@ def test_string_reinit():
 def test_function_call_1():
     eval(inspect.currentframe().f_code.co_name, "Hi", run("tests/test-function-call-1.arw"))
     
+def test_function_call_2():
+    eval(inspect.currentframe().f_code.co_name, 3, run("tests/test-function-call-2.arw"))
+    
 def test_function_call_parameter_1():
     eval(inspect.currentframe().f_code.co_name, "Hi", run("tests/test-function-call-parameter-1.arw"))
     
@@ -106,6 +114,9 @@ def test_function_call_parameter_3():
 
 def test_function_call_parameter_4():
     eval(inspect.currentframe().f_code.co_name, 10, run("tests/test-function-call-parameter-4.arw"))
+    
+def test_function_call_parameter_5():
+    eval(inspect.currentframe().f_code.co_name, 3, run("tests/test-function-call-parameter-5.arw"))
     
 def test_if_statement_1():
     eval(inspect.currentframe().f_code.co_name, 10, run("tests/test-if-statement-1.arw"))
@@ -128,34 +139,37 @@ def test_function_call_parameter_array():
     
     
 if __name__ == "__main__":
-    test_int()
-    test_int_reinit()
-    test_int_operator_add_1()
-    test_int_operator_add_2()
-    test_int_operator_add_3()
-    test_int_operator_add_4()
-    test_int_reinit_operator_add_1()
-    test_int_reinit_operator_add_2()
-    test_int_reinit_operator_add_3()
-    test_int_operator_multiply_1()
-    test_int_operator_sub_1()
-    test_int_operator_sub_2()
-    test_int_operator_sub_3()
-    test_string()
-    test_string_reinit()
-    test_string_add_1()
-    test_string_add_2()
-    test_string_add_3()
-    test_string_add_4()
-    test_function_call_1()
-    test_function_call_parameter_1()
-    test_function_call_parameter_2()
-    test_function_call_parameter_3()
+    # test_int()
+    # test_int_reinit()
+    # test_int_operator_add_1()
+    # test_int_operator_add_2()
+    # test_int_operator_add_3()
+    # test_int_operator_add_4()
+    # test_int_reinit_operator_add_1()
+    # test_int_reinit_operator_add_2()
+    # test_int_reinit_operator_add_3()
+    # test_int_operator_multiply_1()
+    # test_int_operator_sub_1()
+    # test_int_operator_sub_2()
+    # test_int_operator_sub_3()
+    if(compiling is not True):
+        test_string()
+        test_string_reinit()
+        test_string_add_1()
+        test_string_add_2()
+        test_string_add_3()
+        test_string_add_4()
+        test_function_call_1()
+    # test_function_call_2()
+    if(compiling is not True):  
+        test_function_call_parameter_1()
+        test_function_call_parameter_2()
+        test_function_call_parameter_3()
     test_function_call_parameter_4()
-    test_if_statement_1()
-    test_if_statement_2()
-    test_fibonachi()
-    test_array_1()
-    # test_function_call_parameter_array()
-    test_while_loop_1()
-    eval_result()
+    # test_function_call_parameter_5()
+    # test_if_statement_1()
+    # test_if_statement_2()
+    # test_fibonachi()
+    # test_array_1()
+    # test_while_loop_1()
+    # eval_result()
