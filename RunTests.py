@@ -123,9 +123,15 @@ def test_if_statement_1():
 
 def test_if_statement_2():
     eval(inspect.currentframe().f_code.co_name, "aaaaaaaaaa", run("tests/test-if-statement-2.arw"))
+    
+def test_if_statement_3():
+    eval(inspect.currentframe().f_code.co_name, 10, run("tests/test-if-statement-3.arw"))
 
 def test_fibonachi():
     eval(inspect.currentframe().f_code.co_name, 55 , run("tests/test-fibonachi.arw"))
+
+def test_fibonachi_compiler():
+    eval(inspect.currentframe().f_code.co_name, 55 , run("tests/test-fibonachi-compiler.arw"))
 
 def test_array_1():
     eval(inspect.currentframe().f_code.co_name, 10 , run("tests/test-array-1.arw"))
@@ -165,11 +171,15 @@ if __name__ == "__main__":
         test_function_call_parameter_1()
         test_function_call_parameter_2()
         test_function_call_parameter_3()
-    test_function_call_parameter_4()
+    # test_function_call_parameter_4()
     # test_function_call_parameter_5()
     # test_if_statement_1()
-    # test_if_statement_2()
-    # test_fibonachi()
+    if(compiling is not True):  
+        test_if_statement_2()
+    # test_if_statement_3()
+    if(compiling is not True):  
+        test_fibonachi()
+    test_fibonachi_compiler()
     # test_array_1()
     # test_while_loop_1()
     # eval_result()
