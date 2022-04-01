@@ -15,24 +15,9 @@ _start:
 karkel_lang_Main:
     push {r4, r5, r6, r7, r8, r9, r10, r11, lr }
 @ assign at line 3
-    mov r4, #0
-    .section .data
-    StringOut_str: .ascii "Test:n"
-    .section .text
-    push {r1, r2}
-    ldr r1, =StringOut_str
-    mov r2, #5
-    bl print
-    pop {r1, r2}
-    push { r1, r2}
-    mov r1, r4
-    add r1, r1, #30
-    add r2, #1
-    bl print
-    ldr r1, =newline
-    bl print
-    pop {r1, r2}
-@ return at line 6
+    mov r5, #11
+    mov r6, #1
+    sub r4, r5, r6
+@ return at line 4
     mov r0, r4
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-

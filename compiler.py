@@ -1,6 +1,7 @@
 # from turtle import left
 
 # from black import err
+from tokenize import String
 from astNodes import *
 from tokenParser import *
 
@@ -34,44 +35,40 @@ def compileReturnNode(node: ReturnNode, registerLookup: dict[str, int]):
     else:
         return None, "Return Value could not be found"
 
-def compileNodeRegister(node, registerLookup: dict[str, int]):
+def compileNodeRegister(node, registerLookup: dict[str, int], noLiterals = False):
     if(type(node) == FunctionCallNode):
         register = getAvailableRegister(registerLookup)
         out, error = compileFunctionCallNode(node, register, registerLookup)
         return f"r{register}", out, error, False, register
     elif(node.identifier == None):
-        return f"#{node.value}", [], None, True, None
+        if(noLiterals is True):
+            register = getAvailableRegister(registerLookup) 
+            return f"r{register}", [f"mov r{register}, #{node.value}"], None, True, register
+        else:
+            return f"#{node.value}", [], None, True, None
     else:
         return f"r{registerLookup.get(node.identifier.value)}", [], None, False, None
     
-def getLeftRight(node, registerLookup: dict[str, int]):
-    left, prefixLeft, error, left_literal, register = compileNodeRegister(node.left, registerLookup)
-    right, prefixright, error, right_literal, _ = compileNodeRegister(node.right, registerLookup if register == None else {**registerLookup, left: register})
+def getLeftRight(node, registerLookup: dict[str, int], noLiterals = False):
+    left, prefixLeft, error, left_literal, register = compileNodeRegister(node.left, registerLookup, noLiterals)
+    right, prefixright, error, right_literal, _ = compileNodeRegister(node.right, registerLookup if register == None else {**registerLookup, left: register}, noLiterals)
     prefix = prefixLeft + prefixright
     
     return left, right, prefix, error, (left_literal, right_literal)
       
 def compileOperatorNode(node: OperatorNode, registerLookup: dict[str, int], outputRegister):
  
-    left, right, prefix, error, literals = getLeftRight(node, registerLookup)
+    left, right, prefix, error, literals = getLeftRight(node, registerLookup, noLiterals = True)
     
     if(error != None):
         return None, error
     
-    if(literals[0] == True and literals[1] == True and type(node) == AdditionNode):
-        right = f"#{int(left[1:]) + int(right[1:])}"
-        left = f"r{outputRegister}"
-    elif(literals[0] == True and literals[1] == True and type(node) == SubtractionNode):
-        right = f"#{int(left[1:]) - int(right[1:])}"
-        left = f"r{outputRegister}"
-        return [f"mov r{outputRegister}, {right}"], None
-    
     if(type(node) == AdditionNode):
-        return prefix +  ["push { r0, r1 }", f"mov r0, {right}",  f"mov r1, {left}", f"add r{outputRegister}, r1, r0", "pop { r0, r1 }" ], None
+        return prefix + [f"add r{outputRegister}, {left}, {right}"], None
     elif(type(node) == MultiplicationNode):
-        return prefix + ["push { r0, r1 }", f"mov r0, {right}",  f"mov r1, {left}", f"mul r{outputRegister}, r1, r0", "pop { r0, r1 }" ], None
+        return prefix + [f"mul r{outputRegister}, {left}, {right}"], None
     elif(type(node) == SubtractionNode):
-        return prefix +  ["push { r0, r1 }", f"mov r0, {right}",  f"mov r1, {left}", f"sub r{outputRegister}, r1, r0", "pop { r0, r1 }" ], None
+        return prefix + [f"sub r{outputRegister}, {left}, {right}"], None
     elif(type(node) == DivisionNode):
         return prefix + [f"sub r{outputRegister}, {left}, {right}"], None
     else:
@@ -92,12 +89,35 @@ def addParameters(parameters: list[ASTNode], registerLookup={}, availableParamet
         return None, "Too many parameters (>3)"
     
 
+
+def getPrintParameter(node, registerNr, registerLookUp):
+
+    if(node.identifier.value in ["StringOutLine","StringOut"]):
+        suffixEndline = "" if node.identifier.value == "StringOut" else "\n"
+        asciiAssembly = [".section .data", f"{node.identifier.value}_str: .ascii \"{node.parameters[0].value + suffixEndline}n\""] 
+        return asciiAssembly + [".section .text"] + [ "push {r1, r2}", f"ldr r1, ={node.identifier.value}_str", f"mov r2, #{len(node.parameters[0].value) +len(suffixEndline)}",  "bl print", "pop {r1, r2}"], None       
+    elif(node.identifier.value in ["IntOutLine", "IntOut"]):
+        suffixEndline = [] if node.identifier.value == "IntOut" else ["ldr r1, =newline", "bl print"]
+        register = registerLookUp.get(node.parameters[0].identifier.value)
+        return ["push { r1, r2}", f"mov r1, r{register}","add r1, r1, #30","add r2, #1","bl print"] + suffixEndline + ["pop {r1, r2}"], None
+        
+        
+   
+    
+    
+    
+
 def compileFunctionCallNode(node, registerNr, registerLookup):
+    if(node.identifier.value in ["StringOutLine", "IntOutLine","StringOut", "IntOut"]):
+        return getPrintParameter(node, registerNr, registerLookup)
+
     comment = "@ Function call at line " + str(node.lineNr)
     functionCall = node
     prefix, error = addParameters(functionCall.parameters, registerLookup)
     if(error == None):
-        return [comment] + ["push {r1, r2, r3}"] + prefix + [f"bl karkel_lang_{node.identifier.value}", f"mov r{registerNr}, r0", "pop {r1, r2, r3}" ], None
+        if(registerNr == None):
+            return [comment] + ["push {r1, r2, r3}"] + prefix + [f"bl karkel_lang_{node.identifier.value}", "pop {r1, r2, r3}" ], None
+        return [comment] + ["push {r1, r2, r3}"] + prefix + [f"bl karkel_lang_{node.identifier.value}", "pop {r1, r2, r3}", f"mov r{registerNr}, r0" ], None
     else:
         return None, error
     
@@ -128,13 +148,12 @@ def compileIfNode(node: IfNode, registerLookup: dict[str, int]):
     comment = "@ if at line " + str(node.lineNr)
     ifBodyId = get_id()
     
-    left, right, prefix, error, literals = getLeftRight(node.comparison, registerLookup)
+    left, right, prefix, error, literals = getLeftRight(node.comparison, registerLookup, noLiterals=True)
     
     
     if(error == None):
-        comparisonPrefix = ["push { r0, r1 }", f"mov r0, {right}",  f"mov r1, {left}",]
         cmpInstruction = getCmpInstruction(node.comparison)
-        ifComparisonAssembly = comparisonPrefix + [f"cmp r0, r1", f"{cmpInstruction} if_{ifBodyId}", f"b end_if_{ifBodyId}"]
+        ifComparisonAssembly = [f"cmp {left}, {right}", f"{cmpInstruction} if_{ifBodyId}", f"b end_if_{ifBodyId}"]
         ifTrue = [f"if_{ifBodyId}:"]
         ifBodyAssembly, error = compileFunctionBodyCode(node.codeSequenceNode.Sequence, registerLookup)
         if(error == None):
@@ -167,14 +186,15 @@ def compileWhileNode(node: WhileNode, registerLookup: dict[str, int]):
     WhileId = get_id()
     whileTrueId = f"while_true_{WhileId}"
     whileFalseId = f"while_false_{WhileId}"
-    left, right, prefix, error, literals = getLeftRight(node.comparison, registerLookup)
+    whileBodyId = f"while_body_{WhileId}"
+    left, right, prefix, error, literals = getLeftRight(node.comparison, registerLookup, noLiterals=True)
     
     if(error == None):
         cmpInstruction = getCmpInstruction(node.comparison)
-        whileComparisonAssembly = [f"cmp {left}, {right}", f"{cmpInstruction} {whileFalseId}"]
+        whileComparisonAssembly = [f"cmp {left}, {right}", f"{cmpInstruction} {whileBodyId}", f"b {whileFalseId}", f"{whileBodyId}:"]
         whileBodyAssembly, error = compileFunctionBodyCode(node.codeSequenceNode.Sequence, registerLookup)
         if(error == None):
-            return [comment] + [f"{whileTrueId}:"] + prefix + whileComparisonAssembly + whileBodyAssembly + [f"b {whileTrueId}"] + [f"{whileFalseId}:"], error
+            return [comment] + [f"{whileTrueId}:"] + prefix + whileComparisonAssembly + whileBodyAssembly + [f"b {whileTrueId}", f"{whileFalseId}:"], error
         
     return None, error
 
@@ -195,6 +215,9 @@ def compileFunctionBodyCode(code: list[ASTNode], registerLookup: dict[str, int]=
         elif(type(code[0]) == WhileNode):
             out, error = compileWhileNode(code[0], registerLookup)
             registers = registerLookup
+        elif(type(code[0]) == FunctionCallNode):
+            out, error = compileFunctionCallNode(code[0], None, registerLookup)
+            registers = registerLookup 
         else:
             return [], None
         
@@ -224,18 +247,24 @@ def compileFunctionBody(node: FunctionDeclareNode):
         return None, error
     
 def compileFunctionDeclareNode(node: FunctionDeclareNode):
+    if(node.identifier.value == ""):
+        pass
     functionPrefixAssembler = f"@ Function {node.identifier.value} at line {node.lineNr}"
     functionNameAssembler = f"karkel_lang_{node.identifier.value}:"
-    suffix = ""
+    filePrefixAssembler = []
     if(node.identifier.value == "Main"):
-        functionNameAssembler = "_start:\n    mov r7, #0x1"
-        suffix = "    swi 0"
+        filePrefixAssembler = ["_start:"] + list(map(addIndent, ["mov r7, #0x1","bl karkel_lang_Main", "swi 0"]))
     
     bodyAssembler, error = compileFunctionBody(node)
     if(error == None):
-        return [functionPrefixAssembler] + [functionNameAssembler] + bodyAssembler[:-1] + [suffix] + [bodyAssembler[-1]], None
+        return filePrefixAssembler + [functionPrefixAssembler] + [functionNameAssembler] + bodyAssembler, None
     else:
         return None, error
+
+
+def generatePrint():
+    return ["print:"] + list(map(addIndent, ["push { r7, lr }", "mov r7, #0x4", "swi 0", "pop { r7, pc }"])), None
+
 
 def compile(node):
     if(type(node) == FunctionDeclareNode):
@@ -246,7 +275,7 @@ def compile(node):
 
 def compilerRun(root: ASTRoot):
     #todo check for errors
-    out = [([".global _start", ".section .text"], None)] + list(map(compile, root.codeSequenceNode.Sequence))
+    out = [([".global _start", ".section .data", f"newline: .ascii \"\\n\"", ".section .text"], None)] + [generatePrint()] + list(map(compile, root.codeSequenceNode.Sequence))
     assembler = ""
     for function in out:
         for line in function[0]:

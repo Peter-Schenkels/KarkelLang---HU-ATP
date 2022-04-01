@@ -1,0 +1,7 @@
+& Main[] X # 
+<
+    # bye <- 0!
+    StringOut[{Test:}]!
+    IntOut[bye]!
+    bye -> !
+>

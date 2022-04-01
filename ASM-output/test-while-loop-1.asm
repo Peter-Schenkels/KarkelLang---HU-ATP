@@ -1,6 +1,4 @@
 .global _start
-.section .data
-newline: .ascii "\n"
 .section .text
 print:
     push { r7, lr }
@@ -16,23 +14,19 @@ karkel_lang_Main:
     push {r4, r5, r6, r7, r8, r9, r10, r11, lr }
 @ assign at line 3
     mov r4, #0
-    .section .data
-    StringOut_str: .ascii "Test:n"
-    .section .text
-    push {r1, r2}
-    ldr r1, =StringOut_str
-    mov r2, #5
-    bl print
-    pop {r1, r2}
-    push { r1, r2}
-    mov r1, r4
-    add r1, r1, #30
-    add r2, #1
-    bl print
-    ldr r1, =newline
-    bl print
-    pop {r1, r2}
-@ return at line 6
+@ assign at line 4
+    mov r5, #10
+@ While loop at line: 9
+while_true_e80zoo8df9:
+    cmp r4, r5
+    blt while_body_e80zoo8df9
+    b while_false_e80zoo8df9
+    while_body_e80zoo8df9:
+@ assign at line 7
+    mov r6, #1
+    add r4, r4, r6
+    b while_true_e80zoo8df9
+while_false_e80zoo8df9:
+@ return at line 9
     mov r0, r4
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-

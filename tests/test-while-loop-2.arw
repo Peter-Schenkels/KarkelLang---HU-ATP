@@ -1,0 +1,18 @@
+& Main[] X #
+<
+    # iteratorX <- 0!
+    # iteratorY <- 0!
+    # max <- 10!
+    O iteratorX << max
+    <
+        O iteratorY << max
+        <
+            ~IntOut[iteratorY]!~
+            iteratorY <- iteratorY + 1!
+        >
+        iteratorY <- 0!
+        ~IntOutLine[iteratorX]!~
+        iteratorX <- iteratorX + 1!
+    >
+    iteratorX -> !
+>

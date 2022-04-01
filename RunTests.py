@@ -145,47 +145,62 @@ def test_array_1():
 def test_while_loop_1():
     eval(inspect.currentframe().f_code.co_name, 10 , run("tests/test-while-loop-1.arw"))
     
+def test_while_loop_2():
+    eval(inspect.currentframe().f_code.co_name, 10 , run("tests/test-while-loop-2.arw"))
+    
+def test_print_1():
+    eval(inspect.currentframe().f_code.co_name, 0 , run("tests/test-print-1.arw"))
+    
+def test_print_2():
+    eval(inspect.currentframe().f_code.co_name, 0 , run("tests/test-print-2.arw"))
+    
+def test_print_3():
+    eval(inspect.currentframe().f_code.co_name, 0 , run("tests/test-print-3.arw"))
+    
 def test_function_call_parameter_array():
     eval(inspect.currentframe().f_code.co_name, 10 , run("tests/test-function-call-parameter-array.arw"))
     
     
     
 if __name__ == "__main__":
-    test_int()
-    test_int_reinit()
-    test_int_operator_add_1()
-    test_int_operator_add_2()
-    test_int_operator_add_3()
-    test_int_operator_add_4()
-    test_int_reinit_operator_add_1()
-    test_int_reinit_operator_add_2()
-    test_int_reinit_operator_add_3()
-    test_int_operator_multiply_1()
-    test_int_operator_sub_1()
-    test_int_operator_sub_2()
-    test_int_operator_sub_3()
-    if(compiling is not True):
-        test_string()
-        test_string_reinit()
-        test_string_add_1()
-        test_string_add_2()
-        test_string_add_3()
-        test_string_add_4()
-        test_function_call_1()
-    test_function_call_2()
-    if(compiling is not True):  
-        test_function_call_parameter_1()
-        test_function_call_parameter_2()
-        test_function_call_parameter_3()
-    test_function_call_parameter_4()
-    test_function_call_parameter_5()
-    test_if_statement_1()
-    if(compiling is not True):  
-        test_if_statement_2()
-    test_if_statement_3()
-    if(compiling is not True):  
-        test_fibonachi()
-    # test_fibonachi_compiler()  
-    # test_array_1()
+    # test_int()
+    # test_int_reinit()
+    # test_int_operator_add_1()
+    # test_int_operator_add_2()
+    # test_int_operator_add_3()
+    # test_int_operator_add_4()
+    # test_int_reinit_operator_add_1()
+    # test_int_reinit_operator_add_2()
+    # test_int_reinit_operator_add_3()
+    # test_int_operator_multiply_1()
+    # test_int_operator_sub_1()
+    # test_int_operator_sub_2()
+    # test_int_operator_sub_3()
+    # if(compiling is not True):
+    #     test_string()
+    #     test_string_reinit()
+    #     test_string_add_1()
+    #     test_string_add_2()
+    #     test_string_add_3()
+    #     test_string_add_4()
+    #     test_function_call_1()
+    # test_function_call_2()
+    # if(compiling is not True):  
+    #     test_function_call_parameter_1()
+    #     test_function_call_parameter_2()
+    #     test_function_call_parameter_3()
+    # test_function_call_parameter_4()
+    # test_function_call_parameter_5()
+    # test_if_statement_1()
+    # if(compiling is not True):  
+    #     test_if_statement_2()
+    # test_if_statement_3()
+    # test_fibonachi()
+    # if(compiling is not True):
+    #     test_array_1()
     # test_while_loop_1()
-    # eval_result()
+    # test_while_loop_2()
+    test_print_1()
+    test_print_2()
+    test_print_3()
+    eval_result()

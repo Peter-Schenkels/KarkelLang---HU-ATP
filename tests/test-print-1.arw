@@ -1,0 +1,6 @@
+& Main[] X # 
+<
+    StringOutLine[{Hello, World!}]!
+    # bye <- 0!
+    bye -> !
+>

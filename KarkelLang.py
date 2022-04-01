@@ -14,6 +14,12 @@ def run(file: str):
     if(root):
         if(compiling is True):
             assembler = compilerRun(root)
+            try:
+                file = open("ASM-output/" + file[6:-4] + ".asm", "x")
+            except FileExistsError:
+                file = open("ASM-output/" + file[6:-4] + ".asm", "w")
+            file.write(assembler)
+            file.close()
             check_call(['wsl', 'touch','out.asm'])
             check_call(['wsl', 'echo',assembler, '>', 'out.asm'])
             check_call(['wsl', "arm-linux-gnueabi-as", "out.asm", "-o",  "out.o"])

@@ -29,10 +29,7 @@ karkel_lang_Main:
     add r1, r1, #30
     add r2, #1
     bl print
-    ldr r1, =newline
-    bl print
     pop {r1, r2}
 @ return at line 6
     mov r0, r4
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-
