@@ -38,15 +38,15 @@ def compileNodeRegister(node, registerLookup: dict[str, int]):
     if(type(node) == FunctionCallNode):
         register = getAvailableRegister(registerLookup)
         out, error = compileFunctionCallNode(node, register, registerLookup)
-        return f"r{register}", out, error, False
+        return f"r{register}", out, error, False, register
     elif(node.identifier == None):
-        return f"#{node.value}", [], None, True
+        return f"#{node.value}", [], None, True, None
     else:
-        return f"r{registerLookup.get(node.identifier.value)}", [], None, False
+        return f"r{registerLookup.get(node.identifier.value)}", [], None, False, None
     
 def getLeftRight(node, registerLookup: dict[str, int]):
-    left, prefixLeft, error, left_literal = compileNodeRegister(node.left, registerLookup)
-    right, prefixright, error, right_literal = compileNodeRegister(node.right, registerLookup)
+    left, prefixLeft, error, left_literal, register = compileNodeRegister(node.left, registerLookup)
+    right, prefixright, error, right_literal, _ = compileNodeRegister(node.right, registerLookup if register == None else {**registerLookup, left: register})
     prefix = prefixLeft + prefixright
     
     return left, right, prefix, error, (left_literal, right_literal)
@@ -55,24 +55,23 @@ def compileOperatorNode(node: OperatorNode, registerLookup: dict[str, int], outp
  
     left, right, prefix, error, literals = getLeftRight(node, registerLookup)
     
-    if(literals[0] == True and literals[1] == True):
-        right = f"#{int(left[1]) + int(right[1])}"
-        left = f"r{outputRegister}"
-    elif(literals[0] == True and literals[1] == False):
-        left, right = right, left
-        # swap = left
-        # left = right
-        # right = swap
-    
     if(error != None):
-        return None, error 
-        
+        return None, error
+    
+    if(literals[0] == True and literals[1] == True and type(node) == AdditionNode):
+        right = f"#{int(left[1:]) + int(right[1:])}"
+        left = f"r{outputRegister}"
+    elif(literals[0] == True and literals[1] == True and type(node) == SubtractionNode):
+        right = f"#{int(left[1:]) - int(right[1:])}"
+        left = f"r{outputRegister}"
+        return [f"mov r{outputRegister}, {right}"], None
+    
     if(type(node) == AdditionNode):
-        return prefix + [f"add r{outputRegister}, {left}, {right}"], None
+        return prefix +  ["push { r0, r1 }", f"mov r0, {right}",  f"mov r1, {left}", f"add r{outputRegister}, r1, r0", "pop { r0, r1 }" ], None
     elif(type(node) == MultiplicationNode):
-        return prefix + [f"mul r{outputRegister}, {left}, {right}"], None
+        return prefix + ["push { r0, r1 }", f"mov r0, {right}",  f"mov r1, {left}", f"mul r{outputRegister}, r1, r0", "pop { r0, r1 }" ], None
     elif(type(node) == SubtractionNode):
-        return prefix + [f"sub r{outputRegister}, {left}, {right}"], None
+        return prefix +  ["push { r0, r1 }", f"mov r0, {right}",  f"mov r1, {left}", f"sub r{outputRegister}, r1, r0", "pop { r0, r1 }" ], None
     elif(type(node) == DivisionNode):
         return prefix + [f"sub r{outputRegister}, {left}, {right}"], None
     else:
@@ -129,11 +128,13 @@ def compileIfNode(node: IfNode, registerLookup: dict[str, int]):
     comment = "@ if at line " + str(node.lineNr)
     ifBodyId = get_id()
     
-    left, right, prefix, error = getLeftRight(node.comparison, registerLookup)
+    left, right, prefix, error, literals = getLeftRight(node.comparison, registerLookup)
+    
     
     if(error == None):
+        comparisonPrefix = ["push { r0, r1 }", f"mov r0, {right}",  f"mov r1, {left}",]
         cmpInstruction = getCmpInstruction(node.comparison)
-        ifComparisonAssembly = [f"cmp {left}, {right}", f"{cmpInstruction} if_{ifBodyId}", f"b end_if_{ifBodyId}"]
+        ifComparisonAssembly = comparisonPrefix + [f"cmp r0, r1", f"{cmpInstruction} if_{ifBodyId}", f"b end_if_{ifBodyId}"]
         ifTrue = [f"if_{ifBodyId}:"]
         ifBodyAssembly, error = compileFunctionBodyCode(node.codeSequenceNode.Sequence, registerLookup)
         if(error == None):
@@ -166,7 +167,7 @@ def compileWhileNode(node: WhileNode, registerLookup: dict[str, int]):
     WhileId = get_id()
     whileTrueId = f"while_true_{WhileId}"
     whileFalseId = f"while_false_{WhileId}"
-    left, right, prefix, error = getLeftRight(node.comparison, registerLookup)
+    left, right, prefix, error, literals = getLeftRight(node.comparison, registerLookup)
     
     if(error == None):
         cmpInstruction = getCmpInstruction(node.comparison)

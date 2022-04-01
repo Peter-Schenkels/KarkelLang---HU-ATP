@@ -32,7 +32,7 @@ def eval(functionName: str, expectedResult, output):
                 testSucceeded = testSucceeded + 1
                 print(bcolors.OKGREEN + functionName  + " Succeeded" + bcolors.RESET) 
         else:
-            print(bcolors.FAIL + functionName  + " Failed, got: " + str(output.currentFunction.returnValue.value) + bcolors.RESET)
+            print(bcolors.FAIL + functionName  + " Failed, got: " + str(output) + bcolors.RESET)
 
 def test_int():
     eval(inspect.currentframe().f_code.co_name, 10, run("tests/test-int.arw"))
@@ -122,7 +122,7 @@ def test_function_call_parameter_4():
     eval(inspect.currentframe().f_code.co_name, 10, run("tests/test-function-call-parameter-4.arw"))
     
 def test_function_call_parameter_5():
-    eval(inspect.currentframe().f_code.co_name, 3, run("tests/test-function-call-parameter-5.arw"))
+    eval(inspect.currentframe().f_code.co_name, 10, run("tests/test-function-call-parameter-5.arw"))
     
 def test_if_statement_1():
     eval(inspect.currentframe().f_code.co_name, 10, run("tests/test-if-statement-1.arw"))
@@ -185,7 +185,7 @@ if __name__ == "__main__":
     test_if_statement_3()
     if(compiling is not True):  
         test_fibonachi()
-    test_fibonachi_compiler()  
-    test_array_1()
-    test_while_loop_1()
-    eval_result()
+    # test_fibonachi_compiler()  
+    # test_array_1()
+    # test_while_loop_1()
+    # eval_result()

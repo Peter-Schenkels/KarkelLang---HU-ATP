@@ -5,6 +5,6 @@
 
 & Main [] X #
 <
-    # var <- Return[1] + Return[2]!
+    # var <- Return[4] + Return[6]!
     var -> !
 >
