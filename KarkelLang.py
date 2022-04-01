@@ -1,8 +1,11 @@
+from re import S
 import sys
 from lexer import *
 from tokenParser import *
 from interpreter import interpreterRun
 from compiler import compilerRun
+from subprocess import check_call
+import subprocess
 
 compiling = True
       
@@ -10,7 +13,16 @@ def run(file: str):
     root = Parse(lexer(open(file, "r").read()))
     if(root):
         if(compiling is True):
-            return compilerRun(root)
+            assembler = compilerRun(root)
+            check_call(['wsl', 'touch','out.asm'])
+            check_call(['wsl', 'echo',assembler, '>', 'out.asm'])
+            check_call(['wsl', "arm-linux-gnueabi-as", "out.asm", "-o",  "out.o"])
+            check_call(['wsl', "arm-linux-gnueabi-gcc", "out.o", "-o",  "out.elf", "-nostdlib"])
+            try:
+                check_call(['wsl', "qemu-arm", "out.elf"])
+            except subprocess.CalledProcessError as ret:
+                return ret.returncode
+            return 0
         else:
             return interpreterRun(root)
     return False

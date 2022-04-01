@@ -7,11 +7,11 @@
     <
         O iteratorY << max
         <
-            ~IntOut[iteratorY]!~
+            IntOut[iteratorY]!
             iteratorY <- iteratorY + 1!
         >
         iteratorY <- 0!
-        ~IntOutLine[iteratorX]!~
+        IntOutLine[iteratorX]!
         iteratorX <- iteratorX + 1!
     >
     iteratorX -> !
