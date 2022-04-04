@@ -1,6 +1,7 @@
 # from turtle import left
 
 # from black import err
+from multiprocessing.sharedctypes import Value
 from tokenize import String
 from astNodes import *
 from tokenParser import *
@@ -16,7 +17,6 @@ def addIndent(n):
         indent = "    "
         return indent + n
     return n
-
 
 def getAvailableRegister(registerLookup: dict[str, int], registers=[*range(4, 12)]):
     if(len(registers) == 0):
@@ -91,7 +91,11 @@ def addParameters(parameters: list[ASTNode], registerLookup={}, availableParamet
 
 
 def getPrintParameter(node, registerNr, registerLookUp):
-
+    if(type(node.parameters[0]) == PrimitiveNode):
+        prefix = ["push { r1, r2 }"]
+        loadNumMemoryAssembly = [f"mov r1, r{registerLookUp.get(node.parameters[0].identifier.value)}", "ldr r2, =num", "str r1, [r2]", "ldr r1, =num", "mov r2, #1"]
+        suffix = ["bl print", "pop { r1, r2 }"]
+        return prefix + loadNumMemoryAssembly + suffix, None
     if(node.identifier.value in ["StringOutLine","StringOut"]):
         suffixEndline = "" if node.identifier.value == "StringOut" else "\n"
         asciiAssembly = [".section .data", f"{node.identifier.value}_str: .ascii \"{node.parameters[0].value + suffixEndline}n\""] 
@@ -136,9 +140,14 @@ def compileAssignNode(node: AssignNode, registerLookup: dict[str, int]):
         return [comment] + prefix, {**registerLookup, node.left.identifier.value : registerNr}, error
     else:
         prefix = []
-        right_value = node.right.value
+        if(type(node.right) == StringNode):
+            right_value = f"\'{node.right.value[0]}\'"
+            cmp = ord(node.right.value[0])
+        else:        
+            right_value = node.right.value
+            cmp = right_value
     if(registerNr):
-        if(right_value < 256):
+        if(cmp < 256):
             return [comment] + prefix + [f"mov r{registerNr}, #{right_value}"], {node.left.identifier.value : registerNr, **registerLookup}, None
         else:
             return [comment] + prefix + [f"ldr r{registerNr}, ={right_value}"], {node.left.identifier.value : registerNr}, None
@@ -275,7 +284,7 @@ def compile(node):
 
 def compilerRun(root: ASTRoot):
     #todo check for errors
-    out = [([".global _start", ".section .data", f"newline: .ascii \"\\n\"", ".section .text"], None)] + [generatePrint()] + list(map(compile, root.codeSequenceNode.Sequence))
+    out = [([".global _start", ".section .data", f"newline: .ascii \"\\n\"", f"num: .word 0", ".section .text"], None)] + [generatePrint()] + list(map(compile, root.codeSequenceNode.Sequence))
     assembler = ""
     for function in out:
         for line in function[0]:

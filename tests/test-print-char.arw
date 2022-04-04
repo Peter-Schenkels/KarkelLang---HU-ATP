@@ -1,0 +1,6 @@
+& Main [] X @
+<
+    @ output <- {a}!
+    StringOut[output]!
+    output -> !
+>

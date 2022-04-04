@@ -47,4 +47,3 @@ karkel_lang_Main:
 @ return at line 15
     mov r0, r4
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-

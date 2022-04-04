@@ -1,0 +1,42 @@
+& divide [# left, # right ] X #
+<
+    # quotient <- 0!
+    O left <>> right
+    <
+        left <- left - right!
+        quotient <- quotient + 1!
+    >
+    quotient -> !
+>
+
+& modulo [# left, # right ] X #
+<
+    decrement <- divide[left, right] * right!
+    number <- number - decrement!
+    number -> !
+>
+
+& printNumber[# number] X #
+<
+    @ jes <- {a}!
+    StringOut[jes]!
+    @ thousand <- divide[number, 1000]!
+    number <- modulo[number, 1000]!
+    @ hundred <- modulo[number, 100]!
+    number <- modulo[number, 100]!
+    @ ten <- modulo[number, 10]!
+    number <- modulo[number, 10]!
+
+    StringOut[thousand]!
+    StringOut[hundred]!
+    StringOut[ten]!
+    StringOut[number]!
+
+    number -> !
+>
+
+& Main[] X # 
+<
+    # num <- printNumber[1111]!
+    num -> !
+>
