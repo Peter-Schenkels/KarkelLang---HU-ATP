@@ -1,6 +1,8 @@
 # from turtle import left
 
 # from black import err
+from multiprocessing.sharedctypes import Value
+from re import L
 from tokenize import String
 from astNodes import *
 from tokenParser import *
@@ -63,9 +65,9 @@ def compileReturnNode(node: ReturnNode, registerLookup: dict[str, int]) -> tuple
     comment = "@ return at line " + str(node.lineNr)
     registerNr = registerLookup.get(node.value.identifier.value)
     if(registerNr != None):
-        return [comment] + [f"mov r0, r{registerNr}", "pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }"], None
+        return [comment] + [f"mov r0, r{registerNr}", "pop {r4-r11, pc }"], None
     else:
-        return None, "Return Value could not be found"
+        return None, "Return Value could not be found, at line Nr" + str(node.lineNr)
 
 def compileNodeRegister(node:ASTNode, registerLookup: dict[str, int], noLiterals:bool = False):
     """Compiles the assembly code for a register allocation.
@@ -159,7 +161,7 @@ def addParameters(parameters: list[ASTNode], registerLookup:dict[str, int]={}, a
         else:
             return [], None
     else:
-        return None, "Too many parameters (>3)"
+        return None, "Too many parameters (>3), at lineNr" + str(parameters[0].lineNr)
     
 
 
@@ -176,6 +178,12 @@ def getPrintParameter(node:FunctionCallNode, registerNr:int, registerLookUp: dic
         str: The error message if there was an error.
     """    
     
+def getPrintParameter(node, registerLookUp):
+    if(type(node.parameters[0]) == PrimitiveNode):
+        prefix = ["push { r1, r2 }"]
+        loadNumMemoryAssembly = [f"mov r1, r{registerLookUp.get(node.parameters[0].identifier.value)}", "ldr r2, =num", "str r1, [r2]", "ldr r1, =num", "mov r2, #1"]
+        suffix = ["bl print", "pop { r1, r2 }"]
+        return prefix + loadNumMemoryAssembly + suffix, None
     if(node.identifier.value in ["StringOutLine","StringOut"]):
         suffixEndline = "" if node.identifier.value == "StringOut" else "\n"
         asciiAssembly = [".section .data", f"{node.identifier.value}_str: .ascii \"{node.parameters[0].value + suffixEndline}n\""] 
@@ -198,14 +206,17 @@ def compileFunctionCallNode(node:FunctionCallNode, registerNr:int, registerLooku
         list[str]: assembly code for the function call
         str: error message if the function call could not be compiled
     """    
+    if(registerNr == None):
+        return None, "No register available, at line Nr:" + str(node.lineNr)
+    
     if(node.identifier.value in ["StringOutLine", "IntOutLine","StringOut", "IntOut"]):
-        return getPrintParameter(node, registerNr, registerLookup)
+        return getPrintParameter(node, registerLookup)
 
     comment = "@ Function call at line " + str(node.lineNr)
     functionCall = node
     prefix, error = addParameters(functionCall.parameters, registerLookup)
     if(error == None):
-        if(registerNr == None):
+        if(registerNr == 99):
             return [comment] + ["push {r1, r2, r3}"] + prefix + [f"bl karkel_lang_{node.identifier.value}", "pop {r1, r2, r3}" ], None
         return [comment] + ["push {r1, r2, r3}"] + prefix + [f"bl karkel_lang_{node.identifier.value}", "pop {r1, r2, r3}", f"mov r{registerNr}, r0" ], None
     else:
@@ -227,22 +238,37 @@ def compileAssignNode(node: AssignNode, registerLookup: dict[str, int]) -> tuple
     comment = "@ assign at line " + str(node.lineNr)
     if(node.left.identifier.value not in registerLookup):
         registerNr = getAvailableRegister(registerLookup)
+        prexist = False
     else:
         registerNr = registerLookup.get(node.left.identifier.value)
+        prexist = True
     if(issubclass(type(node.right), OperatorNode)):
         prefix, error = compileOperatorNode(node.right, {**registerLookup, node.left.identifier.value : registerNr}, registerNr)
         return [comment] + prefix, {**registerLookup, node.left.identifier.value : registerNr}, error
     elif(type(node.right) == FunctionCallNode):
         prefix, error = compileFunctionCallNode(node.right, registerNr, registerLookup)
         return [comment] + prefix, {**registerLookup, node.left.identifier.value : registerNr}, error
+    elif(type(node.right) == PrimitiveNode):
+        rightRegisterNR = registerLookup.get(node.right.identifier.value)
+        if(prexist == False):
+            return [comment] + [f"mov r{registerNr}, r{rightRegisterNR}"], {node.left.identifier.value : registerNr, **registerLookup}, None
+        else:
+            return [comment] + [f"mov r{registerNr}, r{rightRegisterNR}"], registerLookup, None
+            
     else:
         prefix = []
-        right_value = node.right.value
-    if(registerNr):
-        if(right_value < 256):
+        if(type(node.right) == StringNode):
+            right_value = f"\'{node.right.value[0]}\'"
+            cmp = ord(node.right.value[0])
+        else:        
+
+            right_value = node.right.value
+            cmp = right_value
+    if(registerNr != None):
+        if(cmp < 256):
             return [comment] + prefix + [f"mov r{registerNr}, #{right_value}"], {node.left.identifier.value : registerNr, **registerLookup}, None
         else:
-            return [comment] + prefix + [f"ldr r{registerNr}, ={right_value}"], {node.left.identifier.value : registerNr}, None
+            return [comment] + prefix + [f"ldr r{registerNr}, ={right_value}"], {node.left.identifier.value : registerNr, **registerLookup}, None
     return None, None, ("too many local vars", node.lineNr)
 
 def compileIfNode(node: IfNode, registerLookup: dict[str, int]) -> tuple[list[str], str]:
@@ -353,16 +379,18 @@ def compileFunctionBodyCode(code: list[ASTNode], registerLookup: dict[str, int]=
             out, error = compileWhileNode(code[0], registerLookup)
             registers = registerLookup
         elif(type(code[0]) == FunctionCallNode):
-            out, error = compileFunctionCallNode(code[0], None, registerLookup)
+            out, error = compileFunctionCallNode(code[0], 99, registerLookup)
             registers = registerLookup 
         else:
             return [], None
         
         if(error == None):
             suffix, error = compileFunctionBodyCode(code[1:], registers)
-            return out + suffix, error
+            if(error == None):
+                return out + suffix, error
+            return None, error
         else:
-            return None, out[1]
+            return None, error
     
     return [], None
     
@@ -392,7 +420,7 @@ def compileFunctionBody(node: FunctionDeclareNode) -> tuple[list[str], str]:
         list[str]: The assembly code of the function body.
         str: The error message if there was an error.
     """    
-    pushRegistersAssembler =  "push {r4, r5, r6, r7, r8, r9, r10, r11, lr }"
+    pushRegistersAssembler =  "push {r4-r11, lr }"
     bodyCodeAssembler, error = compileFunctionBodyCode(node.code.Sequence, addParametersToRegistersLookUp(node.parameterTypes))
     if(error == None):
         return list(map(addIndent, [pushRegistersAssembler] + bodyCodeAssembler )), None
@@ -456,12 +484,15 @@ def compilerRun(root: ASTRoot) ->str:
     Returns:
         str: assembled output
     """    
-    out = [([".global _start", ".section .data", f"newline: .ascii \"\\n\"", ".section .text"], None)] + [generatePrint()] + list(map(compile, root.codeSequenceNode.Sequence))
+    #todo check for errors
+    out = [([".global _start", ".section .data", f"newline: .ascii \"\\n\"", f"num: .word 0", ".section .text"], None)] + [generatePrint()] + list(map(compile, root.codeSequenceNode.Sequence))
     assembler = ""
     for function in out:
+        if(function[1] != None):
+            return None, function[1]
         for line in function[0]:
             assembler += line + "\n"
-        
-    return assembler
+        assembler += "\n"
+    return assembler, None
 
               

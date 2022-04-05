@@ -1,6 +1,14 @@
+
+& return[# number] X #
+<
+    number -> !
+
+>
+
 & Sum [# left, # right] X #
 <
-    # input <- left + right!
+    @ test <- {mingle}!
+    # input <- return[left] + return[right]!
     input -> !
 >
 

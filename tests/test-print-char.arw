@@ -1,0 +1,9 @@
+& Main [] X @
+<
+    # jerkel <- 49!
+    @ output <- {9}!
+    StringOut[jerkel]!
+    StringOut[output]!
+    output <- {a}!
+    output -> !
+>

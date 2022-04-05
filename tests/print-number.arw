@@ -1,0 +1,58 @@
+& divide [# left, # right ] X #
+<
+    # quotient <- 0!
+    O left <>> right
+    <
+        left <- left - right!
+        quotient <- quotient + 1!
+    >
+    quotient -> !
+>
+
+& modulo [# left, # right ] X #
+<
+    decrement <- right * divide[left, right]!
+    decrement <- left - decrement!
+    decrement -> !
+>
+
+& ord[# number] X #
+<
+    number <- number + 48!
+    number -> !
+>
+
+& printNumber[# number] X #
+<
+    # startTenth <- 10000!
+    # loops <- 5!
+
+    # start <- 0!
+
+    O loops <>> 0
+    <
+        ~# out <- divide[number, startTenth]!
+        out <- ord[out]!
+        ? out <> 0
+        <
+            ? start >< 0 
+            <
+                StringOut[out]!~
+                StringOutLine[{:sukkel}]!
+                loops <- loops - 1!
+                start <- 1!
+            >
+        >
+        number <- modulo[number, startTenth]!   
+        startTenth <- divide[startTenth, 10]!  
+    >
+
+    # true <- 1!
+    true -> !
+>
+
+& Main[] X # 
+<
+    # num <- printNumber[1]!
+    num -> !
+>

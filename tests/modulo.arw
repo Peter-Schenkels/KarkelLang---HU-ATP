@@ -1,0 +1,23 @@
+& divide [# left, # right ] X #
+<
+    # quotient <- 0!
+    O left <>> right
+    <
+        left <- left - right!
+        quotient <- quotient + 1!
+    >
+    quotient -> !
+>
+
+& modulo [# left, # right ] X #
+<
+    decrement <- right * divide[left, right]!
+    decrement <- left - decrement!
+    decrement -> !
+>
+
+& Main[] X # 
+<
+    # num <- modulo[100, 21]!
+    num -> !
+>

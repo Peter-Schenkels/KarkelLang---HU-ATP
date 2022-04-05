@@ -1,0 +1,16 @@
+& divide [# left, # right ] X #
+<
+    # quotient <- 0!
+    O left <>> right
+    <
+        left <- left - right!
+        quotient <- quotient + 1!
+    >
+    quotient -> !
+>
+
+& Main[] X # 
+<
+    # num <- divide[60, 6]!
+    num -> !
+>

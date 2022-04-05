@@ -159,7 +159,21 @@ def test_print_3():
     
 def test_function_call_parameter_array():
     eval(inspect.currentframe().f_code.co_name, 10 , run("tests/test-function-call-parameter-array.arw"))
+
+def division_test():
+    eval(inspect.currentframe().f_code.co_name, 10 , run("tests/division-test.arw"))
+
+def test_char_1():
+    eval(inspect.currentframe().f_code.co_name, ord('a') , run("tests/test-char.arw"))
     
+def test_char_print():
+    eval(inspect.currentframe().f_code.co_name, ord('a') , run("tests/test-print-char.arw"))
+    
+def print_number():
+    eval(inspect.currentframe().f_code.co_name, ord('a') , run("tests/print-number.arw"))
+
+def modulo_test():
+    eval(inspect.currentframe().f_code.co_name, 16 , run("tests/modulo.arw"))
     
     
 if __name__ == "__main__":
@@ -203,4 +217,9 @@ if __name__ == "__main__":
     test_print_1()
     test_print_2()
     test_print_3()
+    # test_char_1()
+    test_char_print()
+    division_test()
+    modulo_test()
+    print_number()
     eval_result()

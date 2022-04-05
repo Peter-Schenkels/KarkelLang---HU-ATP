@@ -16,10 +16,7 @@ _start:
 karkel_lang_Main:
     push {r4, r5, r6, r7, r8, r9, r10, r11, lr }
 @ assign at line 3
-    mov r4, #7
-@ assign at line 4
-    mov r6, #3
-    add r5, r6, r4
-@ return at line 5
-    mov r0, r5
+    mov r4, #'a'
+@ return at line 4
+    mov r0, r4
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }

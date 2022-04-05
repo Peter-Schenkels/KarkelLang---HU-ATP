@@ -1,6 +1,7 @@
 .global _start
 .section .data
 newline: .ascii "\n"
+num: .word 0
 .section .text
 print:
     push { r7, lr }
