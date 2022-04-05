@@ -8,17 +8,39 @@ from tokenParser import *
 import random
 import string
 
-def get_id():
+def get_id() -> str:
+    """Generates a random identifier
+
+    Returns:
+        str: random identifier
+    """    
     return ''.join(random.choice(string.ascii_lowercase + string.digits) for i in range(10))
 
-def addIndent(n):
+def addIndent(n: str) -> str:
+    """Adds an indent to a string
+
+    Args:
+        n(str): input string
+
+    Returns:
+        str: indented string
+    """    
     if(n[0] != '@' and n[:3] != "if_" and n[:10] != "while_true" and n[:7] != "end_if_" and n[:11] != "while_false"):
         indent = "    "
         return indent + n
     return n
 
 
-def getAvailableRegister(registerLookup: dict[str, int], registers=[*range(4, 12)]):
+def getAvailableRegister(registerLookup: dict[str, int], registers=[*range(4, 12)]) -> int:
+    """ Gets an available register from the register lookup table.
+
+    Args:
+        registerLookup (dict[str, int]): available registers look up table
+        registers (list, optional): registers to check. Defaults to [*range(4, 12)].
+
+    Returns:
+        int: available register
+    """    
     if(len(registers) == 0):
         return None
     
@@ -27,7 +49,17 @@ def getAvailableRegister(registerLookup: dict[str, int], registers=[*range(4, 12
     else:
         return registers[0]
 
-def compileReturnNode(node: ReturnNode, registerLookup: dict[str, int]):
+def compileReturnNode(node: ReturnNode, registerLookup: dict[str, int]) -> tuple[list[str], str]:
+    """compiles the assembly code for a return node
+
+    Args:
+        node (ReturnNode): return node
+        registerLookup (dict[str, int]): available registers look up table
+
+    Returns:
+        list[str]: assembly code for the return node
+        str: error message if the return node could not be compiled
+    """    
     comment = "@ return at line " + str(node.lineNr)
     registerNr = registerLookup.get(node.value.identifier.value)
     if(registerNr != None):
@@ -35,7 +67,17 @@ def compileReturnNode(node: ReturnNode, registerLookup: dict[str, int]):
     else:
         return None, "Return Value could not be found"
 
-def compileNodeRegister(node, registerLookup: dict[str, int], noLiterals = False):
+def compileNodeRegister(node:ASTNode, registerLookup: dict[str, int], noLiterals:bool = False):
+    """Compiles the assembly code for a register allocation.
+
+    Args:
+        node (_type_): _description_
+        registerLookup (dict[str, int]): _description_
+        noLiterals (bool, optional): _description_. Defaults to False.
+
+    Returns:
+        _type_: _description_
+    """    
     if(type(node) == FunctionCallNode):
         register = getAvailableRegister(registerLookup)
         out, error = compileFunctionCallNode(node, register, registerLookup)
@@ -50,15 +92,35 @@ def compileNodeRegister(node, registerLookup: dict[str, int], noLiterals = False
         return f"r{registerLookup.get(node.identifier.value)}", [], None, False, None
     
 def getLeftRight(node, registerLookup: dict[str, int], noLiterals = False):
+    """compiles the assembly code for the allocation of the left and right nodes for an operator node
+
+    Args:
+        node (_type_): _description_
+        registerLookup (dict[str, int]): _description_
+        noLiterals (bool, optional): _description_. Defaults to False.
+
+    Returns:
+        _type_: _description_
+    """    
     left, prefixLeft, error, left_literal, register = compileNodeRegister(node.left, registerLookup, noLiterals)
     right, prefixright, error, right_literal, _ = compileNodeRegister(node.right, registerLookup if register == None else {**registerLookup, left: register}, noLiterals)
     prefix = prefixLeft + prefixright
     
     return left, right, prefix, error, (left_literal, right_literal)
       
-def compileOperatorNode(node: OperatorNode, registerLookup: dict[str, int], outputRegister):
- 
-    left, right, prefix, error, literals = getLeftRight(node, registerLookup, noLiterals = True)
+def compileOperatorNode(node: OperatorNode, registerLookup: dict[str, int], outputRegister:int) -> tuple[list[str], str]:
+    """ Compiles the assembly code for an operator node.
+
+    Args:
+        node (OperatorNode): input operator node
+        registerLookup (dict[str, int]): available registers look up table
+        outputRegister (int): output register of operator call
+
+    Returns:
+        list[str]: assembly code for the operator node
+        str: error message if the operator node could not be compiled
+    """    
+    left, right, prefix, error, _ = getLeftRight(node, registerLookup, noLiterals = True)
     
     if(error != None):
         return None, error
@@ -72,9 +134,20 @@ def compileOperatorNode(node: OperatorNode, registerLookup: dict[str, int], outp
     elif(type(node) == DivisionNode):
         return prefix + [f"sub r{outputRegister}, {left}, {right}"], None
     else:
-        return "oops"
+        return "oops", "Node doesn't exist, parser error at line:" + str(node.lineNr)
 
-def addParameters(parameters: list[ASTNode], registerLookup={}, availableParameterRegisters=[1, 2, 3]):
+def addParameters(parameters: list[ASTNode], registerLookup:dict[str, int]={}, availableParameterRegisters: list[int]=[1, 2, 3]) -> tuple[list[str], str]:
+    """Compiles the assembly code for parameter allocation for a function call
+    
+    Args:
+        parameters (list[ASTNode]): input parameter list
+        registerLookup (dict[str, int], optional): available registers look up table. Defaults to {}.
+        availableParameterRegisters (list[int], optional): available parameter registers. Defaults to [1, 2, 3].
+
+    Returns:
+        list[str]: assembly code for the parameter allocation
+        str: error message if the parameter allocation could not be compiled
+    """    
     if(len(availableParameterRegisters) > 0):
         if(len(parameters) != 0):
             prefix, error = addParameters(parameters[1:], registerLookup, availableParameterRegisters[1:])
@@ -90,8 +163,19 @@ def addParameters(parameters: list[ASTNode], registerLookup={}, availableParamet
     
 
 
-def getPrintParameter(node, registerNr, registerLookUp):
+def getPrintParameter(node:FunctionCallNode, registerNr:int, registerLookUp: dict[str, int]) -> tuple[list[str], str]:
+    """Compiles the assembly code for a print function call
 
+    Args:
+        node (FunctionCallNode): input print function call node
+        registerNr (int): Unused register number
+        registerLookUp (dict[str, int]): register lookup table
+
+    Returns:
+        list[str]: The assembly code of the print function call.
+        str: The error message if there was an error.
+    """    
+    
     if(node.identifier.value in ["StringOutLine","StringOut"]):
         suffixEndline = "" if node.identifier.value == "StringOut" else "\n"
         asciiAssembly = [".section .data", f"{node.identifier.value}_str: .ascii \"{node.parameters[0].value + suffixEndline}n\""] 
@@ -102,12 +186,18 @@ def getPrintParameter(node, registerNr, registerLookUp):
         return ["push { r1, r2}", f"mov r1, r{register}","add r1, r1, #30","add r2, #1","bl print"] + suffixEndline + ["pop {r1, r2}"], None
         
         
-   
-    
-    
-    
+def compileFunctionCallNode(node:FunctionCallNode, registerNr:int, registerLookup:dict[str, int]) -> tuple[list[str], str]:
+    """ Compiles a function call node.
 
-def compileFunctionCallNode(node, registerNr, registerLookup):
+    Args:
+        node (FunctionCallNode): input function call node
+        registerNr (int): output register number for the function call
+        registerLookup (dict[str, int]): register look up table
+
+    Returns:
+        list[str]: assembly code for the function call
+        str: error message if the function call could not be compiled
+    """    
     if(node.identifier.value in ["StringOutLine", "IntOutLine","StringOut", "IntOut"]):
         return getPrintParameter(node, registerNr, registerLookup)
 
@@ -122,7 +212,18 @@ def compileFunctionCallNode(node, registerNr, registerLookup):
         return None, error
     
  
-def compileAssignNode(node: AssignNode, registerLookup: dict[str, int]):
+def compileAssignNode(node: AssignNode, registerLookup: dict[str, int]) -> tuple[list[str], dict[str, int], str]:
+    """computes the assembly code for an assign node
+
+    Args:
+        node (AssignNode): assign node to compile
+        registerLookup (dict[str, int]): register lookup table
+
+    Returns:
+        list[str]: assembly code
+        dict[str, int]: register lookup table
+        str: error message (None if no error)
+    """    
     comment = "@ assign at line " + str(node.lineNr)
     if(node.left.identifier.value not in registerLookup):
         registerNr = getAvailableRegister(registerLookup)
@@ -144,7 +245,17 @@ def compileAssignNode(node: AssignNode, registerLookup: dict[str, int]):
             return [comment] + prefix + [f"ldr r{registerNr}, ={right_value}"], {node.left.identifier.value : registerNr}, None
     return None, None, ("too many local vars", node.lineNr)
 
-def compileIfNode(node: IfNode, registerLookup: dict[str, int]):
+def compileIfNode(node: IfNode, registerLookup: dict[str, int]) -> tuple[list[str], str]:
+    """computes the if node and returns the assembly code
+
+    Args:
+        node (IfNode): input if node
+        registerLookup (dict[str, int]): register lookup table
+
+    Returns:
+        list[str]: assembly code
+        str: error message or None
+    """    
     comment = "@ if at line " + str(node.lineNr)
     ifBodyId = get_id()
     
@@ -162,7 +273,15 @@ def compileIfNode(node: IfNode, registerLookup: dict[str, int]):
         
     return None, error
 
-def getCmpInstruction(node: ComparisonNode):
+def getCmpInstruction(node: ComparisonNode) -> str:
+    """gets cmp instruction for given comparison node
+
+    Args:
+        node (ComparisonNode): input comparison node
+
+    Returns:
+        str: cmp instruction
+    """    
     comparisonType = type(node)
 
     if(comparisonType == ComparisonNodeSmallerThan):
@@ -181,7 +300,16 @@ def getCmpInstruction(node: ComparisonNode):
         cmpInstruction = None
     return cmpInstruction
 
-def compileWhileNode(node: WhileNode, registerLookup: dict[str, int]):
+def compileWhileNode(node: WhileNode, registerLookup: dict[str, int]) -> tuple[list[str], str]:
+    """Computes the assembly code for a while node
+
+    Args:
+        node (WhileNode): input while node
+        registerLookup (dict[str, int]): register lookup table
+
+    Returns:
+        tuple[list[str], str]: assembly code and error message
+    """    
     comment = "@ While loop at line: " + str(node.lineNr)
     WhileId = get_id()
     whileTrueId = f"while_true_{WhileId}"
@@ -199,8 +327,17 @@ def compileWhileNode(node: WhileNode, registerLookup: dict[str, int]):
     return None, error
 
 
-def compileFunctionBodyCode(code: list[ASTNode], registerLookup: dict[str, int]={}):
-    
+def compileFunctionBodyCode(code: list[ASTNode], registerLookup: dict[str, int]={}) -> tuple[list[str], str]:
+    """Computes the assembly code for a function body.
+
+    Args:
+        code (list[ASTNode]): list of ast nodes representing the function body.
+        registerLookup (dict[str, int], optional): dictionary compiled of registers with corresponding variable names. Defaults to {}.
+
+    Returns:
+        list[str]: list of assembly code lines
+        str: error message if there were any errors
+    """    
     if(len(code) > 0):
         # Execute code
         if(type(code[0]) == AssignNode):
@@ -229,7 +366,17 @@ def compileFunctionBodyCode(code: list[ASTNode], registerLookup: dict[str, int]=
     
     return [], None
     
-def addParametersToRegistersLookUp(parameters, registerLookup: dict[str, int]={}, availableParameterRegisters=[1, 2, 3]):
+def addParametersToRegistersLookUp(parameters: list[ASTNode], registerLookup: dict[str, int]={}, availableParameterRegisters:list[int]=[1, 2, 3]) -> tuple[dict[str, int], str]:
+    """add a list of parameters to the registerLookup dictionary.
+
+    Args:
+        parameters (_type_): _description_
+        registerLookup (dict[str, int], optional): _description_. Defaults to {}.
+        availableParameterRegisters (list, optional): _description_. Defaults to [1, 2, 3].
+
+    Returns:
+        dict[str, int] & str: new look up table for registers and the error message if there were any
+    """    
     if(len(parameters) > 0):
         if(len(availableParameterRegisters) > 0):
             return addParametersToRegistersLookUp(parameters[1:], {parameters[0].identifier.value : availableParameterRegisters[0], **registerLookup}, availableParameterRegisters[1:])
@@ -238,7 +385,13 @@ def addParametersToRegistersLookUp(parameters, registerLookup: dict[str, int]={}
     else:
         return registerLookup
         
-def compileFunctionBody(node: FunctionDeclareNode):
+def compileFunctionBody(node: FunctionDeclareNode) -> tuple[list[str], str]:
+    """ Compiles the function body of a function to assembly code.
+
+    Returns:
+        list[str]: The assembly code of the function body.
+        str: The error message if there was an error.
+    """    
     pushRegistersAssembler =  "push {r4, r5, r6, r7, r8, r9, r10, r11, lr }"
     bodyCodeAssembler, error = compileFunctionBodyCode(node.code.Sequence, addParametersToRegistersLookUp(node.parameterTypes))
     if(error == None):
@@ -246,7 +399,16 @@ def compileFunctionBody(node: FunctionDeclareNode):
     else:
         return None, error
     
-def compileFunctionDeclareNode(node: FunctionDeclareNode):
+def compileFunctionDeclareNode(node: FunctionDeclareNode) -> tuple[list[str], str]:
+    """Computes the assembly code for a function declaration node
+
+    Args:
+        node (FunctionDeclareNode): input function declare node
+
+    Returns:
+        list[str]: assembly code
+        str: error message
+    """    
     if(node.identifier.value == ""):
         pass
     functionPrefixAssembler = f"@ Function {node.identifier.value} at line {node.lineNr}"
@@ -262,19 +424,38 @@ def compileFunctionDeclareNode(node: FunctionDeclareNode):
         return None, error
 
 
-def generatePrint():
+def generatePrint() -> tuple[list[str], str]:
+    """Generates assembly for the print function
+
+    Returns:
+        (tuple[list[str], str]): Assembly for the print function and error message
+    """
     return ["print:"] + list(map(addIndent, ["push { r7, lr }", "mov r7, #0x4", "swi 0", "pop { r7, pc }"])), None
 
 
-def compile(node):
+def compile(node: FunctionDeclareNode):
+    """Function that only compiles input function declare nodes
+
+    Args:
+        node (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """    
     if(type(node) == FunctionDeclareNode):
         return compileFunctionDeclareNode(node)
-
     else:
         return None
 
-def compilerRun(root: ASTRoot):
-    #todo check for errors
+def compilerRun(root: ASTRoot) ->str:
+    """Runs the compiler on the AST, and assembles the output
+
+    Args:
+        root (ASTRoot): input AST
+
+    Returns:
+        str: assembled output
+    """    
     out = [([".global _start", ".section .data", f"newline: .ascii \"\\n\"", ".section .text"], None)] + [generatePrint()] + list(map(compile, root.codeSequenceNode.Sequence))
     assembler = ""
     for function in out:

@@ -20,15 +20,15 @@ karkel_lang_Main:
     mov r5, #1
     mov r6, #2
     cmp r5, r6
-    blt if_gn6v9d4g6o
-    b end_if_gn6v9d4g6o
-if_gn6v9d4g6o:
+    blt if_qam7hh0hi8
+    b end_if_qam7hh0hi8
+if_qam7hh0hi8:
 @ assign at line 6
     mov r4, #10
 @ return at line 7
     mov r0, r4
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_gn6v9d4g6o:
+end_if_qam7hh0hi8:
 @ assign at line 9
     mov r4, #5
 @ return at line 10

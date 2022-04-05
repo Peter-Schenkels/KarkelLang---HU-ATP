@@ -13,19 +13,19 @@ karkel_lang_Fibonacho:
 @ if at line 14
     mov r4, #100
     cmp r1, r4
-    blt if_hkivq3njrd
-    b end_if_hkivq3njrd
-if_hkivq3njrd:
+    blt if_70ix5mkzf9
+    b end_if_70ix5mkzf9
+if_70ix5mkzf9:
 @ if at line 9
     mov r4, #1
     cmp r1, r4
-    ble if_6cmobqi8a6
-    b end_if_6cmobqi8a6
-if_6cmobqi8a6:
+    ble if_b044sgef2a
+    b end_if_b044sgef2a
+if_b044sgef2a:
 @ return at line 7
     mov r0, r1
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_6cmobqi8a6:
+end_if_b044sgef2a:
 @ assign at line 9
     mov r5, #1
     sub r4, r1, r5
@@ -49,7 +49,7 @@ end_if_6cmobqi8a6:
 @ return at line 12
     mov r0, r6
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_hkivq3njrd:
+end_if_70ix5mkzf9:
 @ return at line 14
     mov r0, r1
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
@@ -65,24 +65,25 @@ karkel_lang_PrintFibonachi:
     mov r4, r0
 @ if at line 28
     cmp r2, r1
-    blt if_8r08uxvc10
-    b end_if_8r08uxvc10
-if_8r08uxvc10:
+    blt if_h327tlz1qj
+    b end_if_h327tlz1qj
+if_h327tlz1qj:
     .section .data
-    StringOut_str: .ascii "Fibonachi:"
+    StringOut_str: .ascii "Fibonachi:n"
     .section .text
     push {r1, r2}
     ldr r1, =StringOut_str
     mov r2, #10
     bl print
     pop {r1, r2}
-    swi 0
-    mov r7, #0x0
-@ Function call at line 23
-    push {r1, r2, r3}
+    push { r1, r2}
     mov r1, r4
-    bl karkel_lang_IntOutLine
-    pop {r1, r2, r3}
+    add r1, r1, #30
+    add r2, #1
+    bl print
+    ldr r1, =newline
+    bl print
+    pop {r1, r2}
 @ assign at line 24
     mov r5, #1
     add r2, r2, r5
@@ -97,7 +98,7 @@ if_8r08uxvc10:
 @ return at line 26
     mov r0, r4
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_8r08uxvc10:
+end_if_h327tlz1qj:
 @ return at line 28
     mov r0, r4
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }

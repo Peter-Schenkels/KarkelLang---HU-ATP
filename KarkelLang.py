@@ -3,13 +3,22 @@ import sys
 from lexer import *
 from tokenParser import *
 from interpreter import interpreterRun
+from interpreter import InterpreterObject
 from compiler import compilerRun
 from subprocess import check_call
 import subprocess
 
 compiling = True
       
-def run(file: str):
+def run(file: str, compiling = True) -> (int | InterpreterObject):
+    """Runs a karkelLang file, runs the compiler if compiling is true else it will interpret the file
+    Args:
+        file (str): ARW file to run
+        compiling (bool, optional): If code should be interpreted or compiled. Defaults to True.
+
+    Returns:
+        int | InterpreterObject: returns the output of the compiler or the interpreter
+    """
     root = Parse(lexer(open(file, "r").read()))
     if(root):
         if(compiling is True):
@@ -20,6 +29,7 @@ def run(file: str):
                 file = open("ASM-output/" + file[6:-4] + ".asm", "w")
             file.write(assembler)
             file.close()
+            # not very functional
             check_call(['wsl', 'touch','out.asm'])
             check_call(['wsl', 'echo',assembler, '>', 'out.asm'])
             check_call(['wsl', "arm-linux-gnueabi-as", "out.asm", "-o",  "out.o"])
@@ -34,6 +44,11 @@ def run(file: str):
     return False
     
 def runOutput(file: str):
+    """Runs a karkelLang file and prints the output
+
+    Args:
+        file (str): ARW file to run
+    """
     output = run(file)
     if(output):
         if(output.error):

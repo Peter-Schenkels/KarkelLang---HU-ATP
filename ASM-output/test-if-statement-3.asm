@@ -13,9 +13,9 @@ karkel_lang_Recursive:
 @ if at line 9
     mov r4, #10
     cmp r1, r4
-    blt if_n6by77nzhq
-    b end_if_n6by77nzhq
-if_n6by77nzhq:
+    blt if_l6x9elnmqr
+    b end_if_l6x9elnmqr
+if_l6x9elnmqr:
 @ assign at line 5
     mov r4, #1
     add r1, r1, r4
@@ -29,7 +29,7 @@ if_n6by77nzhq:
 @ return at line 7
     mov r0, r1
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_n6by77nzhq:
+end_if_l6x9elnmqr:
 @ return at line 9
     mov r0, r1
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }

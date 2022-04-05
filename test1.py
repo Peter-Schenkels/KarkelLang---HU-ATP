@@ -1,2 +1,0 @@
-left = SetAttribute(left, "variable", SetAttribute(left.variable, "index", index.variable.value))
-left = SetAttribute(left, "variable", SetAttribute(left.variable, "value", left.variable.memory[index.variable.value].value))

@@ -4,8 +4,16 @@ from enum import Enum
 import copy
 
 
-#High order function to Get item from a list
-def getItemFromList(items: list, target:str):
+def getItemFromList(items: list[ASTNode], target:str) -> ASTNode:
+    """High order function to Get item from a list
+
+    Args:
+        items (list): list of items
+        target (str): target items identifier value
+
+    Returns:
+        ASTNode: item from list
+    """    
     if(items == []):
         return None
     head, *tail = items
@@ -14,7 +22,16 @@ def getItemFromList(items: list, target:str):
     else:
         return getItemFromList(tail, target)
     
-def getIndexFromList(items: list, target:str):
+def getIndexFromList(items: list, target:str) -> int:
+    """High order function to Get index from a list
+
+    Args:
+        items (list): input items
+        target (str): target items identifier value
+
+    Returns:
+        int: index of the target item
+    """
     if(items == []):
         return -float("inf")
     head, *tail = items
@@ -25,6 +42,8 @@ def getIndexFromList(items: list, target:str):
 
 
 class InterpreterObject(object):
+    """Interpreter Object to store the interpreter state
+    """
     def __init__(self, root: ASTRoot|dict, error: ErrorClass=None, currentFunction: FunctionNode=None):
         if type(root) == dict:
             self.__dict__.update(root)
@@ -34,7 +53,7 @@ class InterpreterObject(object):
             self.currentFunction = currentFunction
 
 class VariableObject():
-    #todo make functional
+    """Variable Object to store the variable return state"""
     def __init__(self, variable: PrimitiveNode|dict, local: bool=None, localVariables: list=None, globalVariables: list=None): 
         if type(variable) == dict:
             self.__dict__.update(variable)
@@ -45,6 +64,7 @@ class VariableObject():
             self.globalVariables = globalVariables
 
 class OperatorObject():
+    """Operator Object to store the operator return state"""
     def __init__(self, output: PrimitiveNode|dict, Error: ErrorClass=None):
         if(type(output) == dict):
             self.__dict__.update(output)
@@ -53,6 +73,17 @@ class OperatorObject():
             self.error = Error
  
 def GetVariableFromContext(globalVariables: list, localVariables: list, parameters: list, name: PrimitiveNode) -> VariableObject:
+    """Searches a target variable from a list of global and local variables based on a name and returns a VariableObject
+
+    Args:
+        globalVariables (list): list of global variables
+        localVariables (list): list of local variables
+        parameters (list): list of function parameters
+        name (PrimitiveNode): name of the target variable
+
+    Returns:
+        VariableObject: the matched the variable
+    """
     output = VariableObject(None, None, None, None)
     if(name.identifier == None or name.identifier.value == None):
         output = SetAttribute(output, "variable", name)
@@ -64,12 +95,23 @@ def GetVariableFromContext(globalVariables: list, localVariables: list, paramete
         output = SetAttribute(output, "variable", parameters[getIndexFromList(parameters, name.identifier.value)])
     if(output.variable != None and type(output.variable) != FunctionNode):
         if(output.variable.type == Types.INTEGER):
-            output.variable.value = int(output.variable.value)
+            output.variable.value = int(output.variable.value) #should be functional
         elif(output.variable.type == Types.STRING):
-            output.variable.value = str(output.variable.value)
+            output.variable.value = str(output.variable.value) #should be functional
     return output   
 
-def GetListOfVariablesObjectFromContext(variables: list, globalVariables: list, localVariables: list, parameters: list) -> list:
+def GetListOfVariablesObjectFromContext(variables: list, globalVariables: list, localVariables: list, parameters: list) -> list[VariableObject]:
+    """Searches target variables from a list of global and local variables based on a name and returns a list with VariableObjects
+
+    Args:
+        variables (list): target variables
+        globalVariables (list): list of global variables
+        localVariables (list): list of local variables
+        parameters (list): list of function parameters
+
+    Returns:
+        list: list of found target variables
+    """
     if(variables != []):
         if(len(variables) > 1):
             head, *tail = variables
@@ -85,6 +127,17 @@ def GetListOfVariablesObjectFromContext(variables: list, globalVariables: list, 
         return []
         
 def GetListOfVariablesFromContext(variables: list, globalVariables: list, localVariables: list, parameters: list) -> list:
+    """Searches target variables from a list of global and local variables based on a name and returns a list with the variable member of the VariableObject
+
+    Args:
+        variables (list): target variables
+        globalVariables (list): list of global variables
+        localVariables (list): list of local variables
+        parameters (list): list of function parameters
+
+    Returns:
+        list: list of found target variables
+    """
     if(variables != []):
         if(len(variables) > 1):
             head, *tail = variables
@@ -101,6 +154,17 @@ def GetListOfVariablesFromContext(variables: list, globalVariables: list, localV
 
 
 def PopVariableFromContext(globalVariables: list, localVariables: list, parameters: list, name: PrimitiveNode) -> VariableObject:
+    """Searches a target variable from a list of global and local variables based on a name and pops a VariableObject from the list
+
+    Args:
+        globalVariables (list): list of global variables
+        localVariables (list): list of local variables
+        parameters (list): list of function parameters
+        name (PrimitiveNode): name of the target variable
+
+    Returns:
+        VariableObject: the matched the variable
+    """
     output = VariableObject(None, None, None, None)
     variable = None
     if(name.identifier == None):
@@ -126,8 +190,18 @@ def PopVariableFromContext(globalVariables: list, localVariables: list, paramete
     output = SetAttribute(output, "globalVariables", globalVariables)
     return output
 
-#todo make functional
 def ExecuteOperator(inputNode: OperatorNode, context: FunctionNode, root: ASTRoot) -> OperatorObject:
+    """Executes an operator based on the inputNode and returns an OperatorObject
+
+    Args:
+        inputNode (OperatorNode): input operator node
+        context (FunctionNode): context of the function
+        root (ASTRoot): root of the AST
+
+    Returns:
+        OperatorObject: output state of the operator
+    """    
+    
     node = copy.deepcopy(inputNode)
     if(context != None):
         localVariables = context.codeSequenceNode.LocalVariables
@@ -215,11 +289,30 @@ def ExecuteOperator(inputNode: OperatorNode, context: FunctionNode, root: ASTRoo
         output = SetAttribute(output, "error", ErrorClass("Operator error", node.lineNr))
         return output
 
-def ExecuteFunction(function: FunctionNode, root: ASTRoot):
-        output = interpreter(copy.deepcopy(function), root, None)
-        return output.currentFunction.returnValue  
+def ExecuteFunction(function: FunctionNode, root: ASTRoot) -> int | str:
+    """Executes a function Node
 
-def ExecuteAssignNode(node: AssignNode, context: FunctionNode, root: ASTRoot):
+    Args:
+        function (FunctionNode): Input function Node
+        root (ASTRoot): root of the AST
+
+    Returns:
+        int | str: output of the executed function node
+    """
+    output = interpreter(copy.deepcopy(function), root, None)
+    return output.currentFunction.returnValue  
+
+def ExecuteAssignNode(node: AssignNode, context: FunctionNode, root: ASTRoot) -> InterpreterObject:
+    """Executes an AssignNode
+
+    Args:
+        node (AssignNode): input AssignNode
+        context (FunctionNode): context of the function
+        root (ASTRoot): root of the AST
+
+    Returns:
+        InterpreterObject: output context of the executed AssignNode
+    """
     left = None
     local = None
     if(context != None):
@@ -313,7 +406,17 @@ def ExecuteAssignNode(node: AssignNode, context: FunctionNode, root: ASTRoot):
             return InterpreterObject(root, None, context)
     return InterpreterObject(root, ErrorClass("Types do not match: ", node.lineNr), context)
 
-def ExecuteReturnNode(node: ReturnNode, context: FunctionNode, root: ASTRoot):
+def ExecuteReturnNode(node: ReturnNode, context: FunctionNode, root: ASTRoot) -> InterpreterObject:
+    """Executes a ReturnNode
+
+    Args:
+        node (ReturnNode): input ReturnNode
+        context (FunctionNode): context of the function
+        root (ASTRoot): root of the AST
+
+    Returns:
+        InterpreterObject: output context of the executed ReturnNode
+    """    
     if(node.value != None):
         localVariables = context.codeSequenceNode.LocalVariables
         returnValue = PopVariableFromContext(root.globalVariables, localVariables,context.parameters, node.value)
@@ -327,7 +430,17 @@ def ExecuteReturnNode(node: ReturnNode, context: FunctionNode, root: ASTRoot):
         else:
             return InterpreterObject(root, ErrorClass("Incorrect return type: ", node.lineNr), context)     
 
-def ExecuteIfNode(node: IfNode, context: FunctionNode, root: ASTRoot):
+def ExecuteIfNode(node: IfNode, context: FunctionNode, root: ASTRoot) -> InterpreterObject:
+    """Executes an IfNode
+
+    Args:
+        node (IfNode): input IfNode
+        context (FunctionNode): context of the function
+        root (ASTRoot): Root of the AST
+
+    Returns:
+        InterpreterObject: output context of the executed IfNode
+    """
     if(node != None):
         output = ExecuteOperator(node.comparison, context, root)
         if(output.output.value == 1):
@@ -337,7 +450,17 @@ def ExecuteIfNode(node: IfNode, context: FunctionNode, root: ASTRoot):
             return InterpreterObject(root, None, context)
     return InterpreterObject(None, ErrorClass("Function stopped unexpectedly"), context.lineNr)
 
-def ExecuteWhileNode(node: WhileNode, context: FunctionNode, root: ASTRoot):
+def ExecuteWhileNode(node: WhileNode, context: FunctionNode, root: ASTRoot) -> InterpreterObject:
+    """Executes a WhileNode
+
+    Args:
+        node (WhileNode): input WhileNode
+        context (FunctionNode): context of the function
+        root (ASTRoot): root of the AST
+
+    Returns:
+        InterpreterObject: output context of the executed WhileNode
+    """
     if(node != None):
         output = ExecuteOperator(node.comparison, context, root)
         if(output.output.value == 1):
@@ -348,6 +471,15 @@ def ExecuteWhileNode(node: WhileNode, context: FunctionNode, root: ASTRoot):
       
 
 def interpreterRun(root: ASTRoot, error: ErrorClass = None) -> InterpreterObject:
+    """Executes the AST
+
+    Args:
+        root (ASTRoot): input AST
+        error (ErrorClass, optional): current error. Defaults to None.
+
+    Returns:
+        InterpreterObject: output state of the AST
+    """    
     if(error == None):
         if(root.codeSequenceNode.Sequence != []):
             if(len(root.codeSequenceNode.Sequence) > 1):
@@ -374,14 +506,32 @@ def interpreterRun(root: ASTRoot, error: ErrorClass = None) -> InterpreterObject
         print(error.what + error.where)
         return False
 
-def ExecuteFunctionDeclareNode(node: FunctionDeclareNode, context: FunctionNode, root: ASTRoot):
+def ExecuteFunctionDeclareNode(node: FunctionDeclareNode, context: FunctionNode, root: ASTRoot) -> InterpreterObject:
+    """Executes a FunctionDeclareNode
+
+    Args:
+        node (FunctionDeclareNode): input FunctionDeclareNode
+        context (FunctionNode): context of the function
+        root (ASTRoot): ast root
+        
+    Returns:
+        InterpreterObject: output context of the executed FunctionDeclareNode
+    """
     if(context == None):
         root = SetAttribute(root, "globalVariables", root.globalVariables + [FunctionNode(None, node.returnType, node.parameterTypes, CodeSequenceNode(None, None, node.code.Sequence, node.lineNr), node.identifier, node.lineNr)])
         return InterpreterObject(root, None, None)
     else:
         return InterpreterObject(None, ErrorClass("Cannot declare a function inside a function"), node.lineNr)
 
-def CheckParameterTypes(parameters: list) -> int:
+def CheckParameterTypes(parameters: list[(PrimitiveNode, PrimitiveNode)]) -> int:
+    """Checks if the input parameter types correspond with the function parameters types
+
+    Args:
+        parameters (list[(PrimitiveNode, PrimitiveNode)]): list of parameters
+
+    Returns:
+        int: returns False if the types are incorrect, True if they are correct
+    """    
     if(parameters != []):
         if(len(parameters) == 1):
             output = (type(parameters[0][0]) == type(parameters[0][1])) 
@@ -394,7 +544,17 @@ def AssignValue(x: tuple):
     x[0].value = x[1].value #big oof
     return x[0]
 
-def ExecuteFunctionCallNode(node: FunctionCallNode, context: FunctionNode, root: ASTRoot):
+def ExecuteFunctionCallNode(node: FunctionCallNode, context: FunctionNode, root: ASTRoot) -> InterpreterObject:
+    """Executes a FunctionCallNode
+
+    Args:
+        node (FunctionCallNode): input FunctionCallNode  
+        context (FunctionNode): context of the function
+        root (ASTRoot): root of the AST
+
+    Returns:
+        InterpreterObject: output context of the executed FunctionCallNode
+    """    
     output = copy.deepcopy(GetVariableFromContext(root.globalVariables, context.codeSequenceNode.LocalVariables, context.parameters, node ))
     function = output.variable
     if(function != None):
@@ -424,13 +584,32 @@ def ExecuteFunctionCallNode(node: FunctionCallNode, context: FunctionNode, root:
         return InterpreterObject(None, ErrorClass("Function doesnt exist", node.lineNr), context)
 
 
-def initArrayMemory(node: ArrayNode, count=0):
+def initArrayMemory(node: ArrayNode, count=0) -> ArrayNode:
+    """Initializes the memory of an arraynode
+
+    Args:
+        node (ArrayNode): _description_
+        count (int, optional): _description_. Defaults to 0.
+
+    Returns:
+        ArrayNode: Output array node with initialised memory
+    """    
     if(count != node.size):
         return initArrayMemory(SetAttribute(node, "memory", node.memory + [copy.deepcopy(node.type)]), count+1)
     else:
         return node
 
 def ExecuteArrayNode(node: ArrayNode, context: FunctionNode, root: ASTRoot) -> InterpreterObject:
+    """Executes an ArrayNode
+
+    Args:
+        node (ArrayNode): input ArrayNode
+        context (FunctionNode): context of the function
+        root (ASTRoot): root of the AST
+
+    Returns:
+        InterpreterObject: output context of the executed ArrayNode
+    """    
     if(context != None):
         localVariables = context.codeSequenceNode.LocalVariables
         parameters = context.parameters
@@ -442,8 +621,17 @@ def ExecuteArrayNode(node: ArrayNode, context: FunctionNode, root: ASTRoot) -> I
     context = SetAttribute(context, "codeSequenceNode", SetAttribute(context.codeSequenceNode, "LocalVariables", context.codeSequenceNode.LocalVariables + [initArrayMemory(node)]))
     return InterpreterObject(root, None, context)
 
-#todo make functional
 def interpreter(node: FunctionNode, root: ASTRoot, error: ErrorClass = None) -> InterpreterObject:
+    """Executes a FunctionNode
+
+    Args:
+        node (FunctionNode): input FunctionNode
+        root (ASTRoot): root of the AST
+        error (ErrorClass, optional): current error. Defaults to None.
+
+    Returns:
+        InterpreterObject: output context of the executed FunctionNode
+    """    
     if(error == None):
         if(node.codeSequenceNode.Sequence != []):
             head, *tail = node.codeSequenceNode.Sequence

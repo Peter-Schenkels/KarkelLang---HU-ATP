@@ -1,4 +1,6 @@
 .global _start
+.section .data
+newline: .ascii "\n"
 .section .text
 print:
     push { r7, lr }
@@ -17,16 +19,16 @@ karkel_lang_Main:
 @ assign at line 4
     mov r5, #10
 @ While loop at line: 9
-while_true_e80zoo8df9:
+while_true_pnpoxzc96r:
     cmp r4, r5
-    blt while_body_e80zoo8df9
-    b while_false_e80zoo8df9
-    while_body_e80zoo8df9:
+    blt while_body_pnpoxzc96r
+    b while_false_pnpoxzc96r
+    while_body_pnpoxzc96r:
 @ assign at line 7
     mov r6, #1
     add r4, r4, r6
-    b while_true_e80zoo8df9
-while_false_e80zoo8df9:
+    b while_true_pnpoxzc96r
+while_false_pnpoxzc96r:
 @ return at line 9
     mov r0, r4
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
