@@ -266,7 +266,7 @@ def ParseAssignment(context: ParserObject) -> ParserObject:
             if(output.error == None):
                 right, context = output.node, output.context
             else:
-                return output.context
+                return output
         else:
             context.error = ErrorClass("Unexpected token expected a Assignment token, got %s" % context.head.value, context.head.lineNr)
             return context
@@ -307,6 +307,7 @@ def ParseKeyword(INPUT_CONTEXT: ParserObject) -> ParserObject:
             case "<<": comparison = ComparisonNodeSmallerThan(None, LEFT, RIGHT, PARSED_CONTEXT.head.lineNr)          
             case ">>": comparison = ComparisonNodeGreaterThan(None, LEFT, RIGHT, PARSED_CONTEXT.head.lineNr)          
             case "<>": comparison = ComparisonNode(None, LEFT, RIGHT, PARSED_CONTEXT.head.lineNr) 
+            case "><": comparison = ComparisonNodeNotEuqal(None, LEFT, RIGHT, PARSED_CONTEXT.head.lineNr) 
             case "<<>": comparison = ComparisonNodeSmallerThanEqual(None, LEFT, RIGHT, PARSED_CONTEXT.head.lineNr) 
             case "<>>": comparison = ComparisonNodeGreaterThanEqual(None, LEFT, RIGHT, PARSED_CONTEXT.head.lineNr)
             case _ : return AddErrorToContext(PARSED_CONTEXT, ErrorClass("Unexpected operator", PARSED_CONTEXT.head.lineNr))

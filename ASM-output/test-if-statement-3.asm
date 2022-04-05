@@ -1,6 +1,7 @@
 .global _start
 .section .data
 newline: .ascii "\n"
+num: .word 0
 .section .text
 print:
     push { r7, lr }
@@ -13,9 +14,9 @@ karkel_lang_Recursive:
 @ if at line 9
     mov r4, #10
     cmp r1, r4
-    blt if_hvvaq142ru
-    b end_if_hvvaq142ru
-if_hvvaq142ru:
+    blt if_p204eodur5
+    b end_if_p204eodur5
+if_p204eodur5:
 @ assign at line 5
     mov r4, #1
     add r1, r1, r4
@@ -29,7 +30,7 @@ if_hvvaq142ru:
 @ return at line 7
     mov r0, r1
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_hvvaq142ru:
+end_if_p204eodur5:
 @ return at line 9
     mov r0, r1
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }

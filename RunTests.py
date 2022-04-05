@@ -171,6 +171,9 @@ def test_char_print():
     
 def print_number():
     eval(inspect.currentframe().f_code.co_name, ord('a') , run("tests/print-number.arw"))
+
+def modulo_test():
+    eval(inspect.currentframe().f_code.co_name, 16 , run("tests/modulo.arw"))
     
     
 if __name__ == "__main__":
@@ -214,8 +217,9 @@ if __name__ == "__main__":
     test_print_1()
     test_print_2()
     test_print_3()
-    test_char_1()
+    # test_char_1()
     test_char_print()
     division_test()
+    modulo_test()
     print_number()
     eval_result()

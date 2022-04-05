@@ -1,6 +1,7 @@
 .global _start
 .section .data
 newline: .ascii "\n"
+num: .word 0
 .section .text
 print:
     push { r7, lr }
@@ -13,19 +14,19 @@ karkel_lang_Fibonacho:
 @ if at line 14
     mov r4, #100
     cmp r1, r4
-    blt if_h9jeli60kf
-    b end_if_h9jeli60kf
-if_h9jeli60kf:
+    blt if_k3uehmvu99
+    b end_if_k3uehmvu99
+if_k3uehmvu99:
 @ if at line 9
     mov r4, #1
     cmp r1, r4
-    ble if_tcy9tldyi2
-    b end_if_tcy9tldyi2
-if_tcy9tldyi2:
+    ble if_u8zcuy8o29
+    b end_if_u8zcuy8o29
+if_u8zcuy8o29:
 @ return at line 7
     mov r0, r1
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_tcy9tldyi2:
+end_if_u8zcuy8o29:
 @ assign at line 9
     mov r5, #1
     sub r4, r1, r5
@@ -49,7 +50,7 @@ end_if_tcy9tldyi2:
 @ return at line 12
     mov r0, r6
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_h9jeli60kf:
+end_if_k3uehmvu99:
 @ return at line 14
     mov r0, r1
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
@@ -65,9 +66,9 @@ karkel_lang_PrintFibonachi:
     mov r4, r0
 @ if at line 28
     cmp r2, r1
-    blt if_njieukdijf
-    b end_if_njieukdijf
-if_njieukdijf:
+    blt if_l3wjuy7yp4
+    b end_if_l3wjuy7yp4
+if_l3wjuy7yp4:
     .section .data
     StringOut_str: .ascii "Fibonachi:n"
     .section .text
@@ -76,14 +77,14 @@ if_njieukdijf:
     mov r2, #10
     bl print
     pop {r1, r2}
-    push { r1, r2}
+    push { r1, r2 }
     mov r1, r4
-    add r1, r1, #30
-    add r2, #1
+    ldr r2, =num
+    str r1, [r2]
+    ldr r1, =num
+    mov r2, #1
     bl print
-    ldr r1, =newline
-    bl print
-    pop {r1, r2}
+    pop { r1, r2 }
 @ assign at line 24
     mov r5, #1
     add r2, r2, r5
@@ -98,7 +99,7 @@ if_njieukdijf:
 @ return at line 26
     mov r0, r4
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_njieukdijf:
+end_if_l3wjuy7yp4:
 @ return at line 28
     mov r0, r4
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }

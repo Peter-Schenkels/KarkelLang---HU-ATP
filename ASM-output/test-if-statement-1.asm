@@ -1,6 +1,7 @@
 .global _start
 .section .data
 newline: .ascii "\n"
+num: .word 0
 .section .text
 print:
     push { r7, lr }
@@ -20,15 +21,15 @@ karkel_lang_Main:
     mov r5, #1
     mov r6, #2
     cmp r5, r6
-    blt if_bon4qkptpl
-    b end_if_bon4qkptpl
-if_bon4qkptpl:
+    blt if_nuhtemkdz7
+    b end_if_nuhtemkdz7
+if_nuhtemkdz7:
 @ assign at line 6
     mov r4, #10
 @ return at line 7
     mov r0, r4
     pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_bon4qkptpl:
+end_if_nuhtemkdz7:
 @ assign at line 9
     mov r4, #5
 @ return at line 10

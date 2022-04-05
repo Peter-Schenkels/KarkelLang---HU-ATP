@@ -57,6 +57,8 @@ def matchToken(input : str, tokens : dict = tokens):
     tokenType = tokens.get(input[0])
     if(tokenType is None):
         pattern = re.compile("^[@-~!-/:-?_ ]*$")
+        if input[0] == input[1]:
+            return Token("Identifier", input[0])
         if(pattern.match(input[0]) != None):
             return Token("Identifier", input[0])
         pattern = re.compile("\d+")
