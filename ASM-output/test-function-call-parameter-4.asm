@@ -3,20 +3,23 @@
 newline: .ascii "\n"
 num: .word 0
 .section .text
+
 print:
     push { r7, lr }
     mov r7, #0x4
     swi 0
     pop { r7, pc }
+
 @ Function return at line 2
 karkel_lang_return:
-    push {r4, r5, r6, r7, r8, r9, r10, r11, lr }
+    push {r4-r11, lr }
 @ return at line 4
     mov r0, r1
-    pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
+    pop {r4-r11, pc }
+
 @ Function Sum at line 8
 karkel_lang_Sum:
-    push {r4, r5, r6, r7, r8, r9, r10, r11, lr }
+    push {r4-r11, lr }
 @ assign at line 10
     mov r4, #'m'
 @ assign at line 11
@@ -35,14 +38,15 @@ karkel_lang_Sum:
     add r5, r6, r7
 @ return at line 12
     mov r0, r5
-    pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
+    pop {r4-r11, pc }
+
 _start:
     mov r7, #0x1
     bl karkel_lang_Main
     swi 0
 @ Function Main at line 15
 karkel_lang_Main:
-    push {r4, r5, r6, r7, r8, r9, r10, r11, lr }
+    push {r4-r11, lr }
 @ assign at line 17
     mov r4, #4
 @ assign at line 18
@@ -57,4 +61,5 @@ karkel_lang_Main:
     mov r6, r0
 @ return at line 20
     mov r0, r6
-    pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
+    pop {r4-r11, pc }
+

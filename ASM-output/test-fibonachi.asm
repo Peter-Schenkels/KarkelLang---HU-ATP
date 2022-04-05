@@ -1,31 +1,34 @@
 .global _start
 .section .data
 newline: .ascii "\n"
+num: .word 0
 .section .text
+
 print:
     push { r7, lr }
     mov r7, #0x4
     swi 0
     pop { r7, pc }
+
 @ Function Fibonacho at line 1
 karkel_lang_Fibonacho:
-    push {r4, r5, r6, r7, r8, r9, r10, r11, lr }
+    push {r4-r11, lr }
 @ if at line 14
     mov r4, #100
     cmp r1, r4
-    blt if_70ix5mkzf9
-    b end_if_70ix5mkzf9
-if_70ix5mkzf9:
+    blt if_iwunp9j9tk
+    b end_if_iwunp9j9tk
+if_iwunp9j9tk:
 @ if at line 9
     mov r4, #1
     cmp r1, r4
-    ble if_b044sgef2a
-    b end_if_b044sgef2a
-if_b044sgef2a:
+    ble if_rf8ub47bs1
+    b end_if_rf8ub47bs1
+if_rf8ub47bs1:
 @ return at line 7
     mov r0, r1
-    pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_b044sgef2a:
+    pop {r4-r11, pc }
+end_if_rf8ub47bs1:
 @ assign at line 9
     mov r5, #1
     sub r4, r1, r5
@@ -48,14 +51,15 @@ end_if_b044sgef2a:
     add r6, r7, r8
 @ return at line 12
     mov r0, r6
-    pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_70ix5mkzf9:
+    pop {r4-r11, pc }
+end_if_iwunp9j9tk:
 @ return at line 14
     mov r0, r1
-    pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
+    pop {r4-r11, pc }
+
 @ Function PrintFibonachi at line 17
 karkel_lang_PrintFibonachi:
-    push {r4, r5, r6, r7, r8, r9, r10, r11, lr }
+    push {r4-r11, lr }
 @ assign at line 19
 @ Function call at line 19
     push {r1, r2, r3}
@@ -65,9 +69,9 @@ karkel_lang_PrintFibonachi:
     mov r4, r0
 @ if at line 28
     cmp r2, r1
-    blt if_h327tlz1qj
-    b end_if_h327tlz1qj
-if_h327tlz1qj:
+    blt if_8lxdpmr1n2
+    b end_if_8lxdpmr1n2
+if_8lxdpmr1n2:
     .section .data
     StringOut_str: .ascii "Fibonachi:n"
     .section .text
@@ -76,14 +80,14 @@ if_h327tlz1qj:
     mov r2, #10
     bl print
     pop {r1, r2}
-    push { r1, r2}
+    push { r1, r2 }
     mov r1, r4
-    add r1, r1, #30
-    add r2, #1
+    ldr r2, =num
+    str r1, [r2]
+    ldr r1, =num
+    mov r2, #1
     bl print
-    ldr r1, =newline
-    bl print
-    pop {r1, r2}
+    pop { r1, r2 }
 @ assign at line 24
     mov r5, #1
     add r2, r2, r5
@@ -97,18 +101,19 @@ if_h327tlz1qj:
     mov r4, r0
 @ return at line 26
     mov r0, r4
-    pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
-end_if_h327tlz1qj:
+    pop {r4-r11, pc }
+end_if_8lxdpmr1n2:
 @ return at line 28
     mov r0, r4
-    pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
+    pop {r4-r11, pc }
+
 _start:
     mov r7, #0x1
     bl karkel_lang_Main
     swi 0
 @ Function Main at line 32
 karkel_lang_Main:
-    push {r4, r5, r6, r7, r8, r9, r10, r11, lr }
+    push {r4-r11, lr }
 @ assign at line 34
 @ Function call at line 34
     push {r1, r2, r3}
@@ -119,4 +124,5 @@ karkel_lang_Main:
     mov r4, r0
 @ return at line 35
     mov r0, r4
-    pop {r4, r5, r6, r7, r8, r9, r10, r11, pc }
+    pop {r4-r11, pc }
+

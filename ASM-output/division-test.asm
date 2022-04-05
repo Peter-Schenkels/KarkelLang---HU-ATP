@@ -16,18 +16,18 @@ karkel_lang_divide:
 @ assign at line 3
     mov r4, #0
 @ While loop at line: 9
-while_true_m2fb0lgx9r:
+while_true_gyl5ewr7ny:
     cmp r1, r2
-    bge while_body_m2fb0lgx9r
-    b while_false_m2fb0lgx9r
-    while_body_m2fb0lgx9r:
+    bge while_body_gyl5ewr7ny
+    b while_false_gyl5ewr7ny
+    while_body_gyl5ewr7ny:
 @ assign at line 6
     sub r1, r1, r2
 @ assign at line 7
     mov r5, #1
     add r4, r4, r5
-    b while_true_m2fb0lgx9r
-while_false_m2fb0lgx9r:
+    b while_true_gyl5ewr7ny
+while_false_gyl5ewr7ny:
 @ return at line 9
     mov r0, r4
     pop {r4-r11, pc }
