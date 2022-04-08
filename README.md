@@ -2,6 +2,7 @@
 A programming language with an intepreter and a compiler written in a functional style using python for a school assigment.
 
 ## How to use it
+A short segement about how to use the intepreter and compiler and how to write program supported by example code with comments.
 
 ###Compiler and Interpeter usage
 
