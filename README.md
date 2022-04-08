@@ -1,9 +1,9 @@
 # KarkelLang
 A programming language with an intepreter and a compiler written in a functional style using python for a school assigment.
 
-### How to use it
+## How to use it
 
-####Compiler and Interpeter usage
+###Compiler and Interpeter usage
 
 ```sh
 # Install the package
@@ -23,7 +23,7 @@ python ./KarkelLang.py [input file directory] --interpret
 python ./KarkelLang.py [input file directory] --compile [output file]
 ```
 
-####Example code
+###Example code
 
 This function calculates the modulo of ```100 % 21``` by implementing it's own divide and modulo.
 ```c
