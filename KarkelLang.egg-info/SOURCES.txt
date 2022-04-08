@@ -1,0 +1,7 @@
+LICENSE
+README.md
+setup.py
+KarkelLang.egg-info/PKG-INFO
+KarkelLang.egg-info/SOURCES.txt
+KarkelLang.egg-info/dependency_links.txt
+KarkelLang.egg-info/top_level.txt

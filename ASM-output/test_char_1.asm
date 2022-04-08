@@ -18,21 +18,8 @@ _start:
 karkel_lang_Main:
     push {r4-r11, lr }
 @ assign at line 3
-    mov r4, #0
-@ assign at line 4
-    mov r5, #10
-@ While loop at line: 9
-while_true_sfubb98p16:
-    cmp r4, r5
-    blt while_body_sfubb98p16
-    b while_false_sfubb98p16
-    while_body_sfubb98p16:
-@ assign at line 7
-    mov r6, #1
-    add r4, r4, r6
-    b while_true_sfubb98p16
-while_false_sfubb98p16:
-@ return at line 9
+    mov r4, #'a'
+@ return at line 4
     mov r0, r4
     pop {r4-r11, pc }
 

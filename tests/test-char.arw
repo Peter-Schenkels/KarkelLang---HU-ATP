@@ -1,4 +1,4 @@
-& Main [] X @
+& Main[] X @
 <
     @ output <- {a}!
     output -> !

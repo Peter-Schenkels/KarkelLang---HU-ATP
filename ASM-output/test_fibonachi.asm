@@ -16,19 +16,19 @@ karkel_lang_Fibonacho:
 @ if at line 14
     mov r4, #100
     cmp r1, r4
-    blt if_iwunp9j9tk
-    b end_if_iwunp9j9tk
-if_iwunp9j9tk:
+    blt if_h9d8ar6mz4
+    b end_if_h9d8ar6mz4
+if_h9d8ar6mz4:
 @ if at line 9
     mov r4, #1
     cmp r1, r4
-    ble if_rf8ub47bs1
-    b end_if_rf8ub47bs1
-if_rf8ub47bs1:
+    ble if_7qleqe9g2b
+    b end_if_7qleqe9g2b
+if_7qleqe9g2b:
 @ return at line 7
     mov r0, r1
     pop {r4-r11, pc }
-end_if_rf8ub47bs1:
+end_if_7qleqe9g2b:
 @ assign at line 9
     mov r5, #1
     sub r4, r1, r5
@@ -52,7 +52,7 @@ end_if_rf8ub47bs1:
 @ return at line 12
     mov r0, r6
     pop {r4-r11, pc }
-end_if_iwunp9j9tk:
+end_if_h9d8ar6mz4:
 @ return at line 14
     mov r0, r1
     pop {r4-r11, pc }
@@ -69,9 +69,9 @@ karkel_lang_PrintFibonachi:
     mov r4, r0
 @ if at line 28
     cmp r2, r1
-    blt if_8lxdpmr1n2
-    b end_if_8lxdpmr1n2
-if_8lxdpmr1n2:
+    blt if_eg7972n632
+    b end_if_eg7972n632
+if_eg7972n632:
     .section .data
     StringOut_str: .ascii "Fibonachi:n"
     .section .text
@@ -102,7 +102,7 @@ if_8lxdpmr1n2:
 @ return at line 26
     mov r0, r4
     pop {r4-r11, pc }
-end_if_8lxdpmr1n2:
+end_if_eg7972n632:
 @ return at line 28
     mov r0, r4
     pop {r4-r11, pc }
@@ -111,18 +111,18 @@ _start:
     mov r7, #0x1
     bl karkel_lang_Main
     swi 0
-@ Function Main at line 32
+@ Function Main at line 31
 karkel_lang_Main:
     push {r4-r11, lr }
-@ assign at line 34
-@ Function call at line 34
+@ assign at line 33
+@ Function call at line 33
     push {r1, r2, r3}
     mov r2, #0
     mov r1, #10
     bl karkel_lang_PrintFibonachi
     pop {r1, r2, r3}
     mov r4, r0
-@ return at line 35
+@ return at line 34
     mov r0, r4
     pop {r4-r11, pc }
 

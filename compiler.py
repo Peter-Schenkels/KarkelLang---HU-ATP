@@ -4,8 +4,10 @@
 from multiprocessing.sharedctypes import Value
 from re import L
 from tokenize import String
+
 from astNodes import *
 from tokenParser import *
+from functools import reduce
 
 import random
 import string
@@ -69,16 +71,20 @@ def compileReturnNode(node: ReturnNode, registerLookup: dict[str, int]) -> tuple
     else:
         return None, "Return Value could not be found, at line Nr" + str(node.lineNr)
 
-def compileNodeRegister(node:ASTNode, registerLookup: dict[str, int], noLiterals:bool = False):
+def compileNodeRegister(node:ASTNode, registerLookup: dict[str, int], noLiterals:bool = False) -> tuple[str, list[str], str, bool, int]:
     """Compiles the assembly code for a register allocation.
 
     Args:
-        node (_type_): _description_
-        registerLookup (dict[str, int]): _description_
-        noLiterals (bool, optional): _description_. Defaults to False.
+        node (ASTNode): node for assignation
+        registerLookup (dict[str, int]): register lookup table
+        noLiterals (bool, optional): Is the value inside a register or not. Defaults to False.
 
     Returns:
-        _type_: _description_
+        str: Register string
+        list[str]: Prefix assembly code
+        str: Error message
+        bool: new register has been allocated
+        int: register number
     """    
     if(type(node) == FunctionCallNode):
         register = getAvailableRegister(registerLookup)
@@ -93,16 +99,16 @@ def compileNodeRegister(node:ASTNode, registerLookup: dict[str, int], noLiterals
     else:
         return f"r{registerLookup.get(node.identifier.value)}", [], None, False, None
     
-def getLeftRight(node, registerLookup: dict[str, int], noLiterals = False):
-    """compiles the assembly code for the allocation of the left and right nodes for an operator node
+def getLeftRight(node, registerLookup: dict[str, int], noLiterals = False)-> tuple[str, str, list[str], str, bool]:
+    """Gets the left and right value of a comparison node
 
     Args:
-        node (_type_): _description_
-        registerLookup (dict[str, int]): _description_
-        noLiterals (bool, optional): _description_. Defaults to False.
+        node (ASTNode): comparison node
+        registerLookup (dict[str, int]): register lookup table
+        noLiterals (bool, optional): Is the value inside a register or not. Defaults to False.
 
     Returns:
-        _type_: _description_
+        tuple[str, str, list[str], str, bool]: left and right register assembly value, prefix assembly code, error message, literals
     """    
     left, prefixLeft, error, left_literal, register = compileNodeRegister(node.left, registerLookup, noLiterals)
     right, prefixright, error, right_literal, _ = compileNodeRegister(node.right, registerLookup if register == None else {**registerLookup, left: register}, noLiterals)
@@ -475,6 +481,25 @@ def compile(node: FunctionDeclareNode):
     else:
         return None
 
+
+def returnFile(lines: tuple[list[str], str], curAssembler: str) -> str:
+    """Turns all the given lines in an assembly file
+
+    Args:
+        lines (tuple[list[str], str]): assembly lines with errors
+    """   
+    if lines != []:    
+        head, *tail = lines
+    else:
+        return curAssembler, None
+    
+    out, error = returnFile( tail, curAssembler + reduce(lambda a, b: a+"\n"+b if b != None else "", head[0]) + "\n\n" )
+    
+    if(head[1] != None):
+        return None, head[1]
+    
+    return  out, error
+    
 def compilerRun(root: ASTRoot) ->str:
     """Runs the compiler on the AST, and assembles the output
 
@@ -486,13 +511,5 @@ def compilerRun(root: ASTRoot) ->str:
     """    
     #todo check for errors
     out = [([".global _start", ".section .data", f"newline: .ascii \"\\n\"", f"num: .word 0", ".section .text"], None)] + [generatePrint()] + list(map(compile, root.codeSequenceNode.Sequence))
-    assembler = ""
-    for function in out:
-        if(function[1] != None):
-            return None, function[1]
-        for line in function[0]:
-            assembler += line + "\n"
-        assembler += "\n"
-    return assembler, None
-
-              
+    
+    return returnFile(out, "")

@@ -278,3 +278,7 @@ class ASTRoot():
             self.globalVariables.append(FunctionNode(None, None, [StringNode(None, None, None, None)], [], IdentifierNode(None, "StringOutLine", 0), 0))
             self.codeSequenceNode = CodeSequenceNode(self, self.globalVariables, [], 0)
             self.tokens = tokens.copy()
+    
+    def __str__(self,):
+        serialized = jsonpickle.encode(self)
+        return json.dumps(json.loads(serialized), indent=2)   

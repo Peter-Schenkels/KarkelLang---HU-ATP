@@ -11,7 +11,7 @@
 
 & modulo [# left, # right ] X #
 <
-    decrement <- right * divide[left, right]!
+    # decrement <- right * divide[left, right]!
     decrement <- left - decrement!
     decrement -> !
 >
@@ -21,3 +21,4 @@
     # num <- modulo[100, 21]!
     num -> !
 >
+

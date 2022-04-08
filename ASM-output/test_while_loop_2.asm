@@ -24,29 +24,29 @@ karkel_lang_Main:
 @ assign at line 5
     mov r6, #10
 @ While loop at line: 17
-while_true_qfsil8yjiq:
+while_true_nurtxa1w8f:
     cmp r4, r6
-    blt while_body_qfsil8yjiq
-    b while_false_qfsil8yjiq
-    while_body_qfsil8yjiq:
+    blt while_body_nurtxa1w8f
+    b while_false_nurtxa1w8f
+    while_body_nurtxa1w8f:
 @ While loop at line: 13
-while_true_0wov61bhtq:
+while_true_e209te85dm:
     cmp r5, r6
-    blt while_body_0wov61bhtq
-    b while_false_0wov61bhtq
-    while_body_0wov61bhtq:
+    blt while_body_e209te85dm
+    b while_false_e209te85dm
+    while_body_e209te85dm:
 @ assign at line 11
     mov r7, #1
     add r5, r5, r7
-    b while_true_0wov61bhtq
-while_false_0wov61bhtq:
+    b while_true_e209te85dm
+while_false_e209te85dm:
 @ assign at line 13
     mov r5, #0
 @ assign at line 15
     mov r7, #1
     add r4, r4, r7
-    b while_true_qfsil8yjiq
-while_false_qfsil8yjiq:
+    b while_true_nurtxa1w8f
+while_false_nurtxa1w8f:
 @ return at line 17
     mov r0, r4
     pop {r4-r11, pc }

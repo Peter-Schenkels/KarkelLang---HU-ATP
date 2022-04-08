@@ -10,31 +10,26 @@ print:
     swi 0
     pop { r7, pc }
 
-@ Function Recursive at line 1
-karkel_lang_Recursive:
+@ Function divide at line 1
+karkel_lang_divide:
     push {r4-r11, lr }
-@ if at line 9
-    mov r4, #10
-    cmp r1, r4
-    blt if_3pmcs36sbc
-    b end_if_3pmcs36sbc
-if_3pmcs36sbc:
-@ assign at line 5
-    mov r4, #1
-    add r1, r1, r4
+@ assign at line 3
+    mov r4, #0
+@ While loop at line: 9
+while_true_110v44mpun:
+    cmp r1, r2
+    bge while_body_110v44mpun
+    b while_false_110v44mpun
+    while_body_110v44mpun:
 @ assign at line 6
-@ Function call at line 6
-    push {r1, r2, r3}
-    mov r1, r1
-    bl karkel_lang_Recursive
-    pop {r1, r2, r3}
-    mov r1, r0
-@ return at line 7
-    mov r0, r1
-    pop {r4-r11, pc }
-end_if_3pmcs36sbc:
+    sub r1, r1, r2
+@ assign at line 7
+    mov r5, #1
+    add r4, r4, r5
+    b while_true_110v44mpun
+while_false_110v44mpun:
 @ return at line 9
-    mov r0, r1
+    mov r0, r4
     pop {r4-r11, pc }
 
 _start:
@@ -47,8 +42,9 @@ karkel_lang_Main:
 @ assign at line 14
 @ Function call at line 14
     push {r1, r2, r3}
-    mov r1, #1
-    bl karkel_lang_Recursive
+    mov r2, #6
+    mov r1, #60
+    bl karkel_lang_divide
     pop {r1, r2, r3}
     mov r4, r0
 @ return at line 15

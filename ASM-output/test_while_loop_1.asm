@@ -19,22 +19,20 @@ karkel_lang_Main:
     push {r4-r11, lr }
 @ assign at line 3
     mov r4, #0
-@ if at line 9
-    mov r5, #1
-    mov r6, #2
-    cmp r5, r6
-    blt if_72twbh9s8j
-    b end_if_72twbh9s8j
-if_72twbh9s8j:
-@ assign at line 6
-    mov r4, #10
-@ return at line 7
-    mov r0, r4
-    pop {r4-r11, pc }
-end_if_72twbh9s8j:
-@ assign at line 9
-    mov r4, #5
-@ return at line 10
+@ assign at line 4
+    mov r5, #10
+@ While loop at line: 9
+while_true_sok1868kkf:
+    cmp r4, r5
+    blt while_body_sok1868kkf
+    b while_false_sok1868kkf
+    while_body_sok1868kkf:
+@ assign at line 7
+    mov r6, #1
+    add r4, r4, r6
+    b while_true_sok1868kkf
+while_false_sok1868kkf:
+@ return at line 9
     mov r0, r4
     pop {r4-r11, pc }
 
