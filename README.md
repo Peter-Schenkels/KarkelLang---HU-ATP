@@ -4,7 +4,7 @@ A programming language with an intepreter and a compiler written in a functional
 ## How to use it
 A short segement about how to use the intepreter and compiler and how to write program supported by example code with comments.
 
-###Compiler and Interpeter usage
+### Compiler and Interpeter usage
 
 ```sh
 # Install the package
@@ -24,7 +24,7 @@ python ./KarkelLang.py [input file directory] --interpret
 python ./KarkelLang.py [input file directory] --compile [output file]
 ```
 
-###Example code
+### Example code
 
 This function calculates the modulo of ```100 % 21``` by implementing it's own divide and modulo.
 ```c
