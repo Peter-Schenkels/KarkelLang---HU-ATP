@@ -516,6 +516,7 @@ def AppendSequenceFromContext(CONTEXT: ParserObject, NODE: ASTNode) -> Tuple[Par
     CODE = CodeSequenceNode(None, FUNC_NODE.code.globalVariables, SEQUENCE, FUNC_NODE.lineNr)
     FUNCTION_DECLARE_NODE = FunctionDeclareNode(None, CODE, FUNC_NODE.parameterTypes, FUNC_NODE.identifier, FUNC_NODE.returnType, FUNC_NODE.lineNr)
     NEW_CONTEXT = ParserObject(CONTEXT.head, CONTEXT.tail, CONTEXT.error, CONTEXT.tokens, CONTEXT.rootAST, FUNCTION_DECLARE_NODE)
+
     return NEW_CONTEXT
 
 def ParseParameters(CONTEXT: ParserObject, FUNCTION_CALL: FunctionCallNode, EXPECTED_TOKENS: list=["ParameterOpen"]) -> ParserObject:
@@ -641,7 +642,6 @@ def ParseIdentifier(CONTEXT: ParserObject) -> ParserObject:
     else:
         return ParseAssignment(CONTEXT)
 
-
 def TokensToAST(CONTEXT: ParserObject) -> ParserObject: 
     """Parses the tokens and returns an AST
 
@@ -673,7 +673,7 @@ def TokensToAST(CONTEXT: ParserObject) -> ParserObject:
             return AddErrorToContext(CONTEXT, ERROR)
     return CONTEXT
 
-def ParseComment(PREVIOUS_CONTEXT: ParserObject) -> ParserObject:
+def ParseComment(PREVIOUS_CONTEXT: ParserObject, current_comments: str="") -> ParserObject:
     """Parses a comment and returns the new context
 
     Args:
@@ -684,10 +684,10 @@ def ParseComment(PREVIOUS_CONTEXT: ParserObject) -> ParserObject:
     """
     CURRENT_CONTEXT = MoveForward(PREVIOUS_CONTEXT)
     if(CURRENT_CONTEXT.tail != []):
-        if(CURRENT_CONTEXT.head.type == "Comment"):
-            return MoveForward(CURRENT_CONTEXT)
+        if(CURRENT_CONTEXT.head.type == "Comment"):          
+            return MoveForward(AppendSequenceFromContext(CURRENT_CONTEXT, CommentNode(None, CURRENT_CONTEXT.head.lineNr, current_comments)))
         else:
-            return ParseComment(CURRENT_CONTEXT)
+            return ParseComment(CURRENT_CONTEXT, current_comments + CURRENT_CONTEXT.head.value + " ")
     return CURRENT_CONTEXT
     
 def Parse(TOKENS : list[Token])->ASTRoot:

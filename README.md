@@ -8,6 +8,7 @@ A short segement about how to use the intepreter and compiler and how to write p
 
 ```sh
 # Python version 3.10.x is required!
+
 # Install the package
 pyhton3.10 -m pip install -e .
 
@@ -17,11 +18,11 @@ sudo apt install qemu-user
 sudo apt install gcc-arm-linux-gnueabi
  
 # For the interpreter
-python ./KarkelLang.py [input file directory] --interpret
+python3.10 ./KarkelLang.py [input file directory] --interpret
 
 # For the compiler, compiles an .asm and .elf file 
 # It runs the output .elf in  arm-qemu emulator
-python ./KarkelLang.py [input file directory] --compile [output file]
+python3.10 ./KarkelLang.py [input file directory] --compile [output file]
 
 # Compiling KarkelLang with makefiles and running the c++ unittest
 Make run
@@ -32,28 +33,42 @@ Make run
 
 This function calculates the modulo of ```100 % 21``` by implementing it's own divide and modulo.
 ```c
-& divide [# left, # right ] X #                   ~Function Declaration, return int~
+                                                
+& divide [# left, # right ] X #                   
 <
-    # quotient <- 0!                              ~Int assigment~
-    O left <>> right                              ~While Loop [left => right]~
+                                                ~Function Declaration, return int~
+                                                ~Int assigment~
+    # quotient <- 0!
+                                                ~While Loop [left > right]~                              
+    O left <>> right                              
     <
-        left <- left - right!                     ~Minus operator reassignment~
-        quotient <- quotient + 1!                 ~Plus operator reassignment~
+                                                ~Minus operator reassignment~
+        left <- left - right!
+                                                ~Plus operator reassignment~                     
+        quotient <- quotient + 1!                
     >
-    quotient -> !                                 ~Return Value~
+                                                ~Return Value~
+    quotient -> !                                 
+>
+                                                
+& modulo [# left, # right ] X #                   
+<
+                                                ~Function Declaration, return int~
+                                                ~Multiply operator with function call~ 
+    # decrement <- right * divide[left, right]!   
+                                                ~Minus operator reassignment~              
+    decrement <- left - decrement!                
+                                                ~Return Value~
+    decrement -> !                                
 >
 
-& modulo [# left, # right ] X #                   ~Function Declaration, return int~
+& Main[] X #                                      
 <
-    # decrement <- right * divide[left, right]!   ~Multiply operator with function call~ 
-    decrement <- left - decrement!                ~Minus operator reassignment~              
-    decrement -> !                                ~Return Value~
->
-
-& Main[] X #                                      ~Main Function Declaration~
-<
-    # num <- modulo[100, 21]!                     ~Function call assignment int~
-    num -> !                                      ~Return value~
+                                                ~Main Function Declaration~
+                                                ~Function call assignment int~
+    # num <- modulo[100, 21]!  
+                                                ~Return value~                   
+    num -> !                                      
 >
 
 ```
@@ -75,7 +90,7 @@ This function calculates the modulo of ```100 % 21``` by implementing it's own d
 
 ### Requirements
 
-- Classes with inheritance ([astNode.py](./astNode.py))
+- Classes with inheritance ([astNodes.py](./astNodes.py))
 - Object printing for all classes using JSON.
 - Type annotated
 - Uses higher order functions
@@ -91,7 +106,7 @@ This function calculates the modulo of ```100 % 21``` by implementing it's own d
       - line 100, lexer
   - reduce
     - [compiler.py](./compiler.py) 
-      - lien 496, returnFile
+      - line 496, returnFile
   - zip
     - [interpreter.py](./interpreter.py)
       - line 563, ExecuteFunctionCallNode
@@ -103,4 +118,31 @@ This function calculates the modulo of ```100 % 21``` by implementing it's own d
 ### Turing completeness
 
 This language has a default flow of control, can store states, has conditional execution and repetition, which makes it able to execute/replicate the results of turing programs which makes it turing complete. 
+
+## List of compiler requirements
+
+### Must haves
+
+#### Criteria
+
+* The Code is commented with docstrings
+* The repo contains a well written readme
+* The code has been written in a functional style
+* The code is turing complete, see [Turing completeness](#Turing_completeness)
+* The language supports loops, see [modulo.arw, line 4](tests/modulo.arw)
+* Classes with inheritance ([astNodes.py](./astNodes.py))
+* Object printing for all classes using JSON. Try: ```python .\KarkelLang.py .\tests\modulo.arw --print```
+
+#### Functionalities
+
+* Compiler compiles multiple functions to assembly for ARM, see [modulo.arw](tests/modulo.arw) as an example file
+* A unit test has been written in C++, see the [unittester.cpp](unittester.cpp) for the c++ unit test
+* A Makefile that compiles the compiler asm and the c++ unittest enviroment, see the [Makefile](Makefile)
+* Example files for testing the functionality of the language. See the folder [tests](tests) and see the file [RunTests.py](RunTests.py) for the corresponding Unit tests.
+* The example files include multiple edge cases for instantiating variables with different kinds of  operators and calling functions with different kinds of arguments and running loops with different kinds of conditions in recursive and non-recursive ways.
+
+### Should/Could haves
+  * Most of the language feratures can be derived from the test files or the Modulo example earlier in this readme.
+  * Comments are supported and are compiled inside the asm files. run ```python ./RunTests.py``` and check [modulo.asm](ASM-output/modulo_test.asm) for comments inside the assembler. Also comments with line numbers for the corresponding sequences are being automatically generated to make it more udnerstandable what's happening.
+  * Just like the Interpreter and the Parser the compiler also supports error handling, though errors are unlikely to happen if the file succesfully passed the Parser.
 

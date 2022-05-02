@@ -1,24 +1,37 @@
-& divide [# left, # right ] X #
+                                                
+& divide [# left, # right ] X #                   
 <
+                                                ~Function Declaration, return int~
+                                                ~Int assigment~
     # quotient <- 0!
-    O left <>> right
+                                                ~While Loop [left > right]~                              
+    O left <>> right                              
     <
+                                                ~Minus operator reassignment~
         left <- left - right!
-        quotient <- quotient + 1!
+                                                ~Plus operator reassignment~                     
+        quotient <- quotient + 1!                
     >
-    quotient -> !
+                                                ~Return Value~
+    quotient -> !                                 
 >
-
-& modulo [# left, # right ] X #
+                                                
+& modulo [# left, # right ] X #                   
 <
-    # decrement <- right * divide[left, right]!
-    decrement <- left - decrement!
-    decrement -> !
+                                                ~Function Declaration, return int~
+                                                ~Multiply operator with function call~ 
+    # decrement <- right * divide[left, right]!   
+                                                ~Minus operator reassignment~              
+    decrement <- left - decrement!                
+                                                ~Return Value~
+    decrement -> !                                
 >
 
-& Main[] X # 
+& Main[] X #                                      
 <
-    # num <- modulo[100, 21]!
-    num -> !
+                                                ~Main Function Declaration~
+                                                ~Function call assignment int~
+    # num <- modulo[100, 21]!  
+                                                ~Return value~                   
+    num -> !                                      
 >
-

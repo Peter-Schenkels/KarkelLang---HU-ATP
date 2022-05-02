@@ -662,6 +662,8 @@ def interpreter(node: FunctionNode, root: ASTRoot, error: ErrorClass = None) -> 
             elif(type(head) == ArrayNode):
                 output = ExecuteArrayNode(head, node, root)
                 return interpreter(output.currentFunction, output.root, output.error)
+            elif(type(head) == CommentNode):
+                return interpreter(node, root, None)
         else:
             return InterpreterObject(root, None, node)
     else:

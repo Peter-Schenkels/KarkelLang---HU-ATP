@@ -1,5 +1,7 @@
 from re import S
 import sys
+
+from numpy import False_
 from lexer import *
 from tokenParser import *
 from interpreter import interpreterRun
@@ -8,8 +10,9 @@ from compiler import compilerRun
 from subprocess import check_call
 import subprocess
 import os
+import platform
       
-def run(file: str, compiling = True, name="out") -> (int | InterpreterObject):
+def run(file: str, compiling = True, name="out", run: bool=True) -> (int | InterpreterObject):
     """Runs a karkelLang file, runs the compiler if compiling is true else it will interpret the file
     Args:
         file (str): ARW file to run
@@ -23,19 +26,36 @@ def run(file: str, compiling = True, name="out") -> (int | InterpreterObject):
         if(compiling is True):
             assembler, error = compilerRun(root)
             if(error == None):
-                os.system("mkdir -p ASM-output")
+                if(platform.system() == "Linux"):
+                    os.system("mkdir -p ASM-output")
                 try:
                     file = open("ASM-output/" + name + ".asm", "x")
                 except FileExistsError:
                     file = open("ASM-output/" + name + ".asm", "w")
                 file.write(assembler)
                 file.close()
+                
+                if(run is True):
+                    check_call(['wsl', 'touch','out.asm'])
+                    check_call(['wsl', 'echo',assembler, '>', 'out.asm'])
+                    check_call(['wsl', "arm-linux-gnueabi-as", "out.asm", "-o",  "out.o"])
+                    check_call(['wsl', "arm-linux-gnueabi-gcc", "out.o", "-o",  "out.elf", "-nostdlib"])
+                    try:
+                        check_call(['wsl', "qemu-arm", "out.elf"])
+                    except subprocess.CalledProcessError as ret:
+                        return ret.returncode
+                    return 0
                 return True
             print(bcolors.FAIL + "Compiler error: " + error)
             return False
         else:
             return interpreterRun(root)
     return False
+
+def PrintAST(file: str):
+    root = Parse(lexer(open(file, "r").read()))
+    print(root)
+    
     
 def runOutput(file: str, compiling, name) -> (int | InterpreterObject):
     """Runs a karkelLang file and prints the output
@@ -43,7 +63,7 @@ def runOutput(file: str, compiling, name) -> (int | InterpreterObject):
     Args:
         file (str): ARW file to run
     """
-    output = run(file, compiling, name)
+    output = run(file, compiling, name, False)
     if(output):
         if(compiling is True):
             print(bcolors.OKGREEN +"Ended: " +  str(output) + bcolors.RESET)
@@ -66,5 +86,10 @@ if __name__ == '__main__':
                 pass
         elif(sys.argv[2] == "--interpret"):
             compiling = False
+            
+        elif(sys.argv[2] == "--print"):
+            PrintAST(file)
+            exit()
+            
     runOutput(file, compiling, name)
   

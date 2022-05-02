@@ -387,6 +387,10 @@ def compileFunctionBodyCode(code: list[ASTNode], registerLookup: dict[str, int]=
         elif(type(code[0]) == FunctionCallNode):
             out, error = compileFunctionCallNode(code[0], 99, registerLookup)
             registers = registerLookup 
+        elif(type(code[0]) == CommentNode):
+            out = ["@" + code[0].value]
+            error = None
+            registers = registerLookup 
         else:
             return [], None
         

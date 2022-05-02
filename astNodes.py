@@ -80,6 +80,11 @@ class CodeSequenceNode(ASTNode):
             self.parentNode = parentNode
             self.Sequence = codeSequence
             self.LocalVariables = []
+class CommentNode(ASTNode):
+    
+    def __init__(self, parentNode=None, lineNr: int = None, comment: str = None):
+        self.value = comment
+        super().__init__(parentNode, lineNr)
 
 class FunctionNode(ASTNode):
     
