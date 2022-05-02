@@ -5,6 +5,7 @@ FALSE_RESULT=17
 
 clean: 
 	@rm -rf $(BIN)
+	@rm -rf ./ASM-output
 
 build: 
 	@mkdir -p $(BIN)

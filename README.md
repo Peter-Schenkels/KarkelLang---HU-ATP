@@ -7,21 +7,25 @@ A short segement about how to use the intepreter and compiler and how to write p
 ### Compiler and Interpeter usage
 
 ```sh
+# Python version 3.10.x is required!
 # Install the package
-pip install -e .
+pyhton3.10 -m pip install -e .
 
 # Installs For using the compiler output execution (optional)
-wsl --install
-(wsl) sudo apt-get update
-(wsl) sudo apt install qemu-user
-(wsl) sudo apt install gcc-arm-linux-gnueabi
+sudo apt-get update
+sudo apt install qemu-user
+sudo apt install gcc-arm-linux-gnueabi
  
-#For the interpreter
+# For the interpreter
 python ./KarkelLang.py [input file directory] --interpret
 
-#For the compiler, compiles an .asm and .elf file 
+# For the compiler, compiles an .asm and .elf file 
 # It runs the output .elf in  arm-qemu emulator
 python ./KarkelLang.py [input file directory] --compile [output file]
+
+# Compiling KarkelLang with makefiles and running the c++ unittest
+Make run
+
 ```
 
 ### Example code

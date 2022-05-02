@@ -5,20 +5,14 @@
 #include <sstream>
 
 
-// # check_call(['wsl', "arm-linux-gnueabi-as", "out.asm", "-o",  "out.o"])
-// # check_call(['wsl', "arm-linux-gnueabi-gcc", "out.o", "-o",  "out.elf", "-nostdlib"])
-// check_call(['wsl', "qemu-arm", "out.elf"])
-
-
 namespace KarkelLang
 {
-
-    inline bool FileExists (const std::string& name) {
+    bool FileExists (const std::string& name) {
         std::ifstream file(name.c_str());
         return file.good();
     }
 
-    inline bool isNumber(const std::string& input)
+    bool isNumber(const std::string& input)
     {
         for (char const &character : input) {
             if (std::isdigit(character) == 0) return false;
@@ -26,7 +20,7 @@ namespace KarkelLang
         return true;
     }
 
-    inline int runTest(const std::string & input_file, const int & expected_result)
+    int runTest(const std::string & input_file, const int & expected_result)
     {
         std::string run_arm_command = "qemu-arm " + input_file; 
         int result = system(run_arm_command.c_str()) >> 8;
@@ -41,7 +35,7 @@ namespace KarkelLang
         return 0;
     }
 
-    inline int StringToNumber(std::string & input)
+    int StringToNumber(std::string & input)
     {
         int output = 0;
         std::stringstream convertor(input);

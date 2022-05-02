@@ -7,7 +7,7 @@ from interpreter import InterpreterObject
 from compiler import compilerRun
 from subprocess import check_call
 import subprocess
-from platform import system
+import os
       
 def run(file: str, compiling = True, name="out") -> (int | InterpreterObject):
     """Runs a karkelLang file, runs the compiler if compiling is true else it will interpret the file
@@ -23,6 +23,7 @@ def run(file: str, compiling = True, name="out") -> (int | InterpreterObject):
         if(compiling is True):
             assembler, error = compilerRun(root)
             if(error == None):
+                os.system("mkdir -p ASM-output")
                 try:
                     file = open("ASM-output/" + name + ".asm", "x")
                 except FileExistsError:
