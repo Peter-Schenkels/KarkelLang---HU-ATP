@@ -7,7 +7,7 @@ A short segement about how to use the intepreter and compiler and how to write p
 ### Compiler and Interpeter usage
 
 ```sh
-# Python version 3.10.x is required!
+# For this section Linux is required
 
 # Install the package
 pyhton3.10 -m pip install -e .
@@ -131,7 +131,7 @@ This language has a default flow of control, can store states, has conditional e
 * The code is turing complete, see [Turing completeness](#Turing_completeness)
 * The language supports loops, see [modulo.arw, line 4](tests/modulo.arw)
 * Classes with inheritance ([astNodes.py](./astNodes.py))
-* Object printing for all classes using JSON. Try: ```python .\KarkelLang.py .\tests\modulo.arw --print```
+* Object printing for all classes using JSON. Try: ```(windows) python .\KarkelLang.py .\tests\modulo.arw --print```
 
 #### Functionalities
 
@@ -143,6 +143,6 @@ This language has a default flow of control, can store states, has conditional e
 
 ### Should/Could haves
   * Most of the language feratures can be derived from the test files or the Modulo example earlier in this readme.
-  * Comments are supported and are compiled inside the asm files. run ```python ./RunTests.py``` and check [modulo.asm](ASM-output/modulo_test.asm) for comments inside the assembler. Also comments with line numbers for the corresponding sequences are being automatically generated to make it more udnerstandable what's happening.
+  * Comments are supported and are compiled inside the asm files. run ```(windows) python .\RunTests.py``` and check [modulo.asm](ASM-output/modulo_test.asm) for comments inside the assembler. Also comments with line numbers for the corresponding sequences are being automatically generated to make it more udnerstandable what's happening.
   * Just like the Interpreter and the Parser the compiler also supports error handling, though errors are unlikely to happen if the file succesfully passed the Parser.
 
